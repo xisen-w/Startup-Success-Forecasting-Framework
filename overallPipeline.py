@@ -14,9 +14,9 @@ from sklearn.preprocessing import OneHotEncoder
 ## This is used for the Overall Analysis Agent - Xisen
 
 # Manage all the API_Keys here
-#OPENAI_API_KEY = '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'
-OPENAI_API_KEY = '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'
-SERP_API_KEY = "a166ed8b1f69417d2a2466ea067756eb18f4d09ac0e2983cca254a75e7ca5367"
+#OPENAI_API_KEY = 
+OPENAI_API_KEY = 'Fill In Your Key'
+SERP_API_KEY = "Fill In Your Key"
 
 # Put some universal variables here
 

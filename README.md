@@ -1,20 +1,24 @@
-# Startup-Success-Forecasting-Framework
-A startup success forecasting framework is proposed, and the relevant code are put here. It is suitable for 
+# Startup Success Forecasting Framework (SSFF)
 
-What does this repo include?
-Data Exploration Files. Model Training Files. Pipeline Building Files.
+The Startup Success Forecasting Framework (SSFF) is a pioneering approach designed to automate the evaluation of startup success potential. Leveraging a blend of traditional machine learning models, Large Language Models (LLMs), and real-time market data analysis, SSFF aims to transform the landscape of venture capital investment by providing deep, actionable insights into the viability of early-stage startups.
 
-To Do List: (checkboxes)
-Launch a Demo Interface. 
-Uprgade to Version 2
+## What This Repo Includes
 
-How to run? 
-python mainPipeline()
+- **Data Exploration Files:** Scripts and notebooks for exploring and understanding the dataset used in model training.
+- **Model Training Files:** Code for training the SSFF's underlying machine learning models, including random forest classifiers and neural networks.
+- **Pipeline Building Files:** Implementation of the SSFF pipeline, integrating LLM analysis, feature extraction, and prediction models for comprehensive startup evaluation.
 
-There are two modes, advanced vs simple. 
+## To-Do List
 
+- [ ] Launch a Demo Interface
+- [ ] Upgrade to Version 2
 
+## How to Run
 
+To execute the main pipeline and analyze a startup, use the following command:
 
+```bash
+python overallPipeline.py
+```
 
 

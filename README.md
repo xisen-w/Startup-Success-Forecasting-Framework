@@ -8,6 +8,10 @@ The Startup Success Forecasting Framework (SSFF) is a pioneering approach design
 - **Model Training Files:** Code for training the SSFF's underlying machine learning models, including random forest classifiers and neural networks.
 - **Pipeline Building Files:** Implementation of the SSFF pipeline, integrating LLM analysis, feature extraction, and prediction models for comprehensive startup evaluation.
 
+
+![image](https://github.com/Xisen-Wang/Startup-Success-Forecasting-Framework/assets/118058822/583db157-5293-4006-8bde-4f7ad7e0d3ea)
+
+
 ## To-Do List
 
 - [ ] Launch a Demo Interface

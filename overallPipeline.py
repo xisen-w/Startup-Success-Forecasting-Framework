@@ -729,21 +729,9 @@ def LevelSegmentation(userContent, model):
     return response
 
 # Testing Area
-test_startup = "WeLight aims to revolutionise China's $2.5 billion college application consulting market by increasing access for over a million Chinese students aspiring to study abroad. As an AI-powered platform, WeLight automates program selection, preparation guidance, and essay review using Large Language Models (LLM), the ANNOY Model, and an extensive database. Additionally, it facilitates mentor-mentee connections for skill development in interviews, English proficiency, and essay writing."
+test_startup = "Put Your Startup Information."
 
-#report = externalMarketKnowledge("WeLight aims to revolutionise China's $2.5 billion college application consulting market by increasing access for over a million Chinese students aspiring to study abroad. As an AI-powered platform, WeLight automates program selection, preparation guidance, and essay review using Large Language Models (LLM), the ANNOY Model, and an extensive database. Additionally, it facilitates mentor-mentee connections for skill development in interviews, English proficiency, and essay writing.")
-
-#SYS = "Explain to me in detail about the market: Chinese Education Consulting Market, Growth, Trend, Size, Revenue. Generate a report about the growth & size of the market. Also, give insights on the timing of entering the market now & also market sentiment. Make your response structured and in detail."
-#print(getResponse(SYS,"",'gpt-4'))
-
-founder_info = "Xisen Wang is the founder. He is from Oxford University, studying engineering science and having experiences in AI Research and founding an education NGO. He is 2nd year undergraduate right now, but has extensive networks and passion."
+founder_info = "Put your founder description."
 
 print(mainPipeline(test_startup, founder_info,"advanced", "gpt-4" ))
 
-#print(getFit("?????????????","A startup of Generative AI. "))
-
-# Combine the information together
-#startup_info = "Startup Description:" + test_startup + "Founder Information: " + founder_info
-#print(startup_info)
-
-#sideVCScout(startup_info,'gpt-4')

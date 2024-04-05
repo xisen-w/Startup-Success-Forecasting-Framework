@@ -11,6 +11,13 @@ The Startup Success Forecasting Framework (SSFF) is a pioneering approach design
 
 ![image](https://github.com/Xisen-Wang/Startup-Success-Forecasting-Framework/assets/118058822/583db157-5293-4006-8bde-4f7ad7e0d3ea)
 
+## Updates
+
+An web interface has been developed! Very easy to interact: 
+
+<img width="1509" alt="Screenshot 2024-04-06 at 12 12 07 AM" src="https://github.com/Xisen-Wang/Startup-Success-Forecasting-Framework/assets/118058822/477be7cf-6884-40d4-ab88-832f63702965">
+
+
 
 ## To-Do List
 

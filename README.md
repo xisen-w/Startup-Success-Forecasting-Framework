@@ -2,6 +2,8 @@
 
 The Startup Success Forecasting Framework (SSFF) is a pioneering approach designed to automate the evaluation of startup success potential. Leveraging a blend of traditional machine learning models, Large Language Models (LLMs), and real-time market data analysis, SSFF aims to transform the landscape of venture capital investment by providing deep, actionable insights into the viability of early-stage startups.
 
+Link to Paper: https://arxiv.org/abs/2405.19456
+
 ## What This Repo Includes
 
 - **Data Exploration Files:** Scripts and notebooks for exploring and understanding the dataset used in model training.
@@ -22,7 +24,7 @@ An web interface has been developed! Very easy to interact:
 ## To-Do List
 
 - [ ] Launch a Demo Interface
-- [ ] Upgrade to Version 2
+- [x] Upgrade to Version 2
 
 ## How to Run
 

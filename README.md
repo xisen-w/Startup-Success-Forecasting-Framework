@@ -23,7 +23,7 @@ An web interface has been developed! Very easy to interact:
 
 ## To-Do List
 
-- [ ] Launch a Demo Interface
+- [x] Launch a Demo Interface
 - [x] Upgrade to Version 2
 
 ## How to Run
@@ -31,7 +31,7 @@ An web interface has been developed! Very easy to interact:
 To execute the main pipeline and analyze a startup, use the following command:
 
 ```bash
-python overallPipeline.py
+python overallPipeline.py //Replace your token first
 ```
 ### This framework supports two modes of operation:
 

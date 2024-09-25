@@ -13,15 +13,11 @@ from sklearn.preprocessing import OneHotEncoder
 ##The main function is here.
 ## This is used for the Overall Analysis Agent - Xisen
 
-# Manage all the API_Keys here
-#OPENAI_API_KEY = 
-OPENAI_API_KEY = 'Fill In Your Key'
-SERP_API_KEY = "Fill In Your Key"
-
 # Put some universal variables here
 
 Market_Report = ""
 News_Report = ""
+Categorical_Division = {}
 
 # Load all models here
 
@@ -37,22 +33,24 @@ def mainPipeline(startup_description, founder_description, mode, model):
     :param startup_info: [description], mode: simple, advanced
     :return: various analyses & the main pipeline
     """
-    #prediction = sideVCScout(test_startup, model)
-    #print(prediction)
-
     # Combine the information together
     startup_info = "Startup Description:" + startup_description + "Founder Information: " + founder_description
+    print("Getting predictions! for", startup_info)
 
     # Get prediction
-    prediction = sideVCScout(startup_info, 'gpt-3.5-turbo')
+    prediction = sideVCScout(startup_info, 'gpt-4')
+    print("Prediction is above!")
 
-    # Determine if I need to segment the startup_info myself
-    if input("Have you preprocessed it?") == "no":
-        print("ANALYZING--------------------------------")
-        startup_info = startup_info_to_JSON(startup_info, model)
+    startup_info = startup_info_to_JSON(startup_info, 'gpt-4')
+    print("After processing", startup_info)
 
-        print(startup_info)
-        print(type(startup_info))
+    # Determine if I need to segment the startup_info myself -Conditional
+    # if input("Have you preprocessed it?") == "no":
+    #     print("ANALYZING--------------------------------")
+    #     startup_info = startup_info_to_JSON(startup_info, model)
+    #
+    #     print(startup_info)
+    #     print(type(startup_info))
 
     # Let the agents do their respective analyses
     print("MARKET INFO ANALYZING--------------------------------")
@@ -69,6 +67,7 @@ def mainPipeline(startup_description, founder_description, mode, model):
     # # Integration Process
     if mode == "simple":
         final_decision = integrate_analyses(market_info, product_info, founder_info, prediction, mode)
+        print(final_decision)
 
     elif mode == "advanced":
         # Do Segmentation
@@ -85,14 +84,89 @@ def mainPipeline(startup_description, founder_description, mode, model):
 
         final_decision = integrate_analyses(market_info, product_info, founder_info, prediction, mode)
 
-        print(final_decision)
-        return [final_decision, market_info, product_info, founder_info, Market_Report, News_Report, Founder_Segmentation, Founder_Idea_Fit, prediction]
+    # Structure the results based on the mode
+    if mode == "simple":
+        # For simple analysis, return a subset of the information
+        return {
+            'Final Decision': final_decision,
+            'Market Info': market_info,
+            'Product Info': product_info,
+            'Founder Info': founder_info,
+            'Prediction': prediction
+        }
 
+    elif mode == "advanced":
+        quantDecision = getquantDecision(prediction, Founder_Idea_Fit, Founder_Segmentation, final_decision, model)
+        print(quantDecision)
+
+        # For advanced analysis, include all details
+        return {
+            'Final Decision': final_decision,
+            'Market Info': market_info,
+            'Product Info': product_info,
+            'Founder Info': founder_info,
+            'Market Report': Market_Report,
+            'News Report': News_Report,
+            'Founder Segmentation': Founder_Segmentation,
+            'Founder Idea Fit': Founder_Idea_Fit,
+            'Categorical Prediction': prediction,
+            'Quantitative Decision': quantDecision,
+            'Categorical Division': Categorical_Division
+        }
     else:
+        # Handle invalid mode
         return None
-    return [final_decision, market_info, product_info, founder_info, "N/A", "N/A", "N/A", "N/A", "N/A"]
+
+
+def getquantDecision(prediction, Founder_Idea_Fit, Founder_Segmentation, final_decision, model):
+    prompt = """
+        You are a final decision-maker. Think step by step. 
+        
+        You are now given Founder Segmentation. With L5 very likely to succeed and L1 least likely. You are also given the Founder-Idea Fit Score, with 1 being most fit and -1 being least fit. You are also given the result of prediction model (which should not be your main evidence because it may not be very accurate).
+        
+        This table summarises the implications of the Level Segmentation:
+        
+        Founder Level & Success & Failure & Success Rate & X-Time Better than L1 \\
+        \midrule
+        L1 & 24 & 75 & 24.24\% & 1 \\
+        L2 & 83 & 223 & 27.12\% & 1.12 \\
+        L3 & 287 & 445 & 39.21\% & 1.62 \\
+        L4 & 514 & 249 & 67.37\% & 2.78 \\
+        L5 & 93 & 8 & 92.08\% & 3.79 \\
+        
+        Regarding the Founder-Idea-Fit Score. Relevant context are provided here: 
+        The previous sections show the strong correlation between founder's segmentation level and startup's outcome, as L5 founders are more than three times likely to succeed than L1 founders. However, looking into the data, one could also see that there are L5 founders who did not succeed, and there are L1 founders who succeeded. To account for these scenarios, we investigate the fit between founders and their ideas.
+        
+        To assess quantitatively, we propose a metric called Founder-Idea Fit Score (FIFS). The Founder-Idea Fit Score quantitatively assesses the compatibility between a founder's experience level and the success of their startup idea. Given the revised Preliminary Fit Score ($PFS$) defined as:
+        \[PFS(F, O) = (6 - F) \times O - F \times (1 - O)\]
+        where $F$ represents the founder's level ($1$ to $5$) and $O$ is the outcome ($1$ for success, $0$ for failure), we aim to normalize this score to a range of $[-1, 1]$ to facilitate interpretation.
+        
+        To achieve this, we note that the minimum $PFS$ value is $-5$ (for a level $5$ founder who fails), and the maximum value is $5$ (for a level $1$ founder who succeeds). The normalization formula to scale $PFS$ to $[-1, 1]$ is:
+        \[Normalized\;PFS = \frac{PFS}{5}\]
+        
+        In addition, you are given the scores of analysis on Market Viability, Product Viability, and Founder Competency in the form of a report. Ignore any analysis in the report but do focus on the numbers. [Important: Focus on the scores, IGNORE any other analysis of the final report. The rest of analysis is meaningless to you and should not affect any of your decision-making.] 
+        
+        Now use all of these information, produce a string of the predicted outcome and probability, with one line of reasoning. 
+        
+        Eg, 
+        [Successful, 65%. The Founder Segmentation score is really strong coupled with the good founder Idea fit. Prediction shows unsuccessful, but it is not always accurate. The Market Viability is 7.5, not that high. However, Founder Competency and Product Viability are a striking 10 and 9. ]
+        
+        [Unsuccessful, 70%] …. Similar Logic. 
+    """
+
+    userPrompt = f"You are provided with the categorical prediction outcome of {prediction}, Founder Segmentation of {Founder_Segmentation}, Founder-Idea Fit of {Founder_Idea_Fit}. Finally, here's the report that contains the score breakdown:{final_decision}."
+
+    return getResponse(prompt, userPrompt, model)
 
 def getResponse(System_Content, User_Content, input_model):
+    # Log the inputs to the function
+    print("System_Content:", System_Content)
+    print("User_Content:", User_Content)
+
+    # Check if the inputs are not None
+    if System_Content is None or User_Content is None:
+        raise ValueError("System_Content and User_Content must be valid strings and not None.")
+
     client = OpenAI(api_key=OPENAI_API_KEY, )
     completion = client.chat.completions.create(
         model=input_model,
@@ -161,7 +235,7 @@ def market_analysis(startup_info, mode, model):
 
     if mode == "advanced":
         # first get external knowledge through searching from APIs
-        external_knowledge = externalMarketKnowledge(startup_info.get('description'))
+        external_knowledge = externalMarketKnowledge(startup_info.get('description'))[1]
         external_prompt = f"Consider the external market knowledge of {startup_info['name'], external_knowledge}."
         analysis_prompt += f"\n{external_prompt}"
         global Market_Report
@@ -201,7 +275,7 @@ def product_analysis(startup_info, mode, model):
         external_prompt = f"Note the information below might depict companies of the same name but of different entities. Ignore those that are not the same entity with the company of our original analysis. Consider the latest product/company knowledge of {startup_info['name']}:\n {external_knowledge}."
         analysis_prompt += f"\n{external_prompt}"
         global News_Report
-        News_Report = News_Report
+        News_Report = external_knowledge
     return getResponse(analysis_prompt, "Please think and analyze step by step and take a deep breath.", model)
 
 
@@ -210,8 +284,7 @@ def founder_analysis(startup_info, mode, model):
         "As a highly qualified analyst specializing in startup founder assessment, you've been tasked "
         "with evaluating the founding team of a new company. Here's what you need to know:\n\n"
         "Consider the founders' educational background, industry experience, leadership capabilities, "
-        "and their ability to align and execute on the company's vision. Look into their digital footprint "
-        "on platforms like Twitter and LinkedIn, and any available data from the Crunchbase and Diffbot APIs "
+        "and their ability to align and execute on the company's vision."
         "to enrich your analysis. Score the founders' competency on a scale of 1 to 10, and provide insights "
         "into their strengths and potential challenges.\n\n"
         "- Founders' Backgrounds: {founder_backgrounds}\n"
@@ -348,8 +421,7 @@ def startup_info_to_JSON(startup_description, model):
         return startup_info
     except json.JSONDecodeError as e:
         print(f"Error parsing JSON: {e}")
-        return()
-
+        return {}
 
 def externalMarketKnowledge(startup_info):
     """
@@ -366,7 +438,7 @@ def externalMarketKnowledge(startup_info):
     Keywords_Prompt = ("You will assist me in finding external market knowledge about a startup. Think step by step. "
                        "Your task is to summarise the information into 1 keyword that best describes the market that the startup is in. "
                        "Sample Output: Chinese Pharmaceutical Market.")
-    keywords = getResponse(Keywords_Prompt, startup_info, 'gpt-3.5-turbo')
+    keywords = getResponse(Keywords_Prompt, startup_info, 'gpt-4')
     keywords += ", Growth, Trend, Size, Revenue"
     print("Keywords: ", keywords)
 
@@ -498,6 +570,8 @@ def sideVCScout(startup_inco, model):
     "Does the startup mention cutting-edge technology in its descriptions? [No/Mentioned/Emphasized/N/A]",
     "Considering the startup's industry and current market conditions, is the timing for the startup's product or service right? [Too Early/Just Right/Too Late/N/A]"
 
+    Please follow the structure of below sample closely.
+    
     Sample JSON Output Format: 
         {
           "startup_analysis_responses": {
@@ -540,15 +614,22 @@ def sideVCScout(startup_inco, model):
     
     """
     categories = getResponse(System_Content, startup_inco, model)
-    print("Categorical Separation:-------- ", categories)
+    print("Categories & Result: ", categories)
+    global Categorical_Division
+    #Categorical_Division = categories['startup_analysis_responses']
+
+    #print("Categorical Separation:-------- ", Categorical_Division)
 
     # Apply the safe parsing function to your data
     categories, errors = safe_parse_categories(categories)
 
-    categories_extracted = extract_dict_values(categories,  'startup_analysis_responses')
+    #categories_extracted = extract_dict_values(categories,  'startup_analysis_responses')
 
     # Actually it turns out simply extracting could work
-    categories_attempt = categories['startup_analysis_responses']
+    categories_attempt = categories['startup_analysis_responses'][0]
+    print("Categorical Attempt:-------- ", categories_attempt)
+
+    Categorical_Division = categories_attempt
 
     # Encoding categorical features
     # Load the encoder
@@ -579,10 +660,10 @@ def sideVCScout(startup_inco, model):
     # Call the function with our special encoder & trained model
     prediction = preprocess_and_predict(categories_attempt, category_mappings, encoder, model_random_forest, feature_order)
 
-    if prediction[0] == 0:
-        prediction = "Unsuccessful"
     if prediction[0] == 1:
         prediction = "Successful"
+    if prediction[0] == 0:
+        prediction = "Unsuccessful"
 
     print(f"Prediction: {prediction}")
     return prediction
@@ -727,11 +808,23 @@ def LevelSegmentation(userContent, model):
     response = getResponse(System_Content, userContent, model)
     print("Segmenting:-------- ", response)
     return response
+#
+# # Testing Area
+# test_startup = "WeLight aims to revolutionise China's $2.5 billion college application consulting market by increasing access for over a million Chinese students aspiring to study abroad. As an AI-powered platform, WeLight automates program selection, preparation guidance, and essay review using Large Language Models (LLM), the ANNOY Model, and an extensive database. Additionally, it facilitates mentor-mentee connections for skill development in interviews, English proficiency, and essay writing."
+#
+# # report = externalMarketKnowledge("WeLight aims to revolutionise China's $2.5 billion college application consulting market by increasing access for over a million Chinese students aspiring to study abroad. As an AI-powered platform, WeLight automates program selection, preparation guidance, and essay review using Large Language Models (LLM), the ANNOY Model, and an extensive database. Additionally, it facilitates mentor-mentee connections for skill development in interviews, English proficiency, and essay writing.")
+# #
+# # SYS = "Explain to me in detail about the market: Chinese Education Consulting Market, Growth, Trend, Size, Revenue. Generate a report about the growth & size of the market. Also, give insights on the timing of entering the market now & also market sentiment. Make your response structured and in detail."
+# # print(getResponse(SYS,"",'gpt-4'))
+# #
+# founder_info = "Xisen Wang is the founder. He is from Oxford University, studying engineering science and having experiences in AI Research and founding an education NGO. He is 2nd year undergraduate right now, but has extensive networks and passion."
 
-# Testing Area
-test_startup = "Put Your Startup Information."
-
-founder_info = "Put your founder description."
-
-print(mainPipeline(test_startup, founder_info,"advanced", "gpt-4" ))
-
+# print(mainPipeline(test_startup, founder_info,"advanced", "gpt-4" ))
+#
+# print(getFit("?????????????","A startup of Generative AI. "))
+#
+# # Combine the information together
+# startup_info = "Startup Description:" + test_startup + "Founder Information: " + founder_info
+# print(startup_info)
+# sideVCScout(startup_info,'gpt-4')
+# print(startup_info)

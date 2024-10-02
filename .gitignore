@@ -1,2 +1,123 @@
+# Python-related
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 
+# Virtual environment
+myenv/
+venv/
+ENV/
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Environment variables
+.env
+
+# IDE-specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Project-specific
 data/
+models/*.keras
+models/*.joblib
+*.log
+
+# Temporary files
+*.tmp
+
+# Database
+*.db
+*.sqlite3
+
+# Output files
+output/
+results/
+
+# API keys and secrets
+secrets.yaml
+config.yaml
+
+# Large files (adjust as needed)
+*.csv
+*.json
+*.pkl
+
+# Compiled source
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Packages
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+

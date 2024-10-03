@@ -66,7 +66,8 @@ class OpenAIAPI:
         try:
             response = self.client.embeddings.create(
                 input=text,
-                model="text-embedding-ada-002"  # You might want to make this configurable
+                model="text-embedding-3-large",  # You might want to make this configurable
+                dimensions = 100,
             )
             return response.data[0].embedding
         except Exception as e:

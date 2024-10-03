@@ -2,6 +2,7 @@ from openai import OpenAI
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
+import serpapi 
 
 # Load environment variables from .env file
 load_dotenv()
@@ -80,7 +81,6 @@ class GoogleSearchAPI:
             raise ValueError("SERPAPI_API_KEY not found in environment variables")
 
     def search(self, query, num_results=5):
-        from serpapi import GoogleSearch
         
         params = {
             "engine": "google",
@@ -88,6 +88,52 @@ class GoogleSearchAPI:
             "api_key": self.api_key,
             "num": num_results
         }
-        search = GoogleSearch(params)
-        results = search.get_dict()
+        search = serpapi.search(params)
+        results = search.as_dict()
         return results.get('organic_results', [])
+
+if __name__ == "__main__":
+    
+    print("Testing starts")
+
+    # Test OpenAIAPI
+    openai_api = OpenAIAPI("gpt-4o")  # Use an appropriate model name
+    
+    # Test get_completion
+    system_content = "You are a helpful assistant."
+    user_content = "What's the capital of France?"
+    completion = openai_api.get_completion(system_content, user_content)
+    print("OpenAI Completion Test:")
+    print(completion)
+    print()
+
+    # Test get_structured_output
+    from pydantic import BaseModel, Field
+
+    class WeatherResponse(BaseModel):
+        temperature: float = Field(..., description="Temperature in Celsius")
+        conditions: str = Field(..., description="Weather conditions (e.g., sunny, rainy)")
+
+    system_prompt = "You are a weather reporting system. Provide weather information based on the user's query."
+    user_prompt = "What's the weather like in Paris today?"
+    structured_output = openai_api.get_structured_output(WeatherResponse, user_prompt, system_prompt)
+    print("OpenAI Structured Output Test:")
+    print(structured_output)
+    print()
+
+    # Test get_embeddings
+    text = "This is a test sentence for embeddings."
+    embeddings = openai_api.get_embeddings(text)
+    print("OpenAI Embeddings Test:")
+    print(f"Embedding vector length: {len(embeddings)}")
+    print(f"First 5 values: {embeddings[:5]}")
+    print()
+
+    # Test GoogleSearchAPI
+    google_api = GoogleSearchAPI()
+    search_results = google_api.search("Python programming")
+    print("Google Search API Test:")
+    for i, result in enumerate(search_results[:3], 1):  # Print first 3 results
+        print(f"{i}. {result['title']}")
+        print(f"   {result['link']}")
+        print()

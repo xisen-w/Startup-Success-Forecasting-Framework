@@ -149,7 +149,7 @@ def display_final_results(result, mode):
 
     # Display Prediction and Categorization
     st.write("### Prediction and Categorization")
-    st.write(f"Prediction: {result['Prediction']}")
+    st.write(f"Prediction: {result['Categorical Prediction']}")
     st.write("Categorization:")
     for key, value in result['Categorization'].items():
         st.write(f"- {key}: {value}")

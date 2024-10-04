@@ -1,3 +1,4 @@
+import streamlit as st
 from openai import OpenAI
 from pydantic import BaseModel
 import os
@@ -14,10 +15,10 @@ class OpenAIAPI:
         """
         self.model_name = model_name  # E.g., "gpt-4-0613" or "gpt-4-1106-preview"
         
-        # Get the API key from environment variables
-        api_key = os.getenv('OPENAI_API_KEY')
+        # Try to get the API key from Streamlit secrets, fall back to environment variable
+        api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
         if not api_key:
-            raise ValueError("OPENAI_API_KEY not found in environment variables")
+            raise ValueError("OPENAI_API_KEY not found in Streamlit secrets or environment variables")
         
         self.client = OpenAI(api_key=api_key)
 
@@ -77,9 +78,10 @@ class OpenAIAPI:
 # The GoogleSearchAPI class remains unchanged
 class GoogleSearchAPI:
     def __init__(self):
-        self.api_key = os.getenv("SERPAPI_API_KEY")
+        # Try to get the API key from Streamlit secrets, fall back to environment variable
+        self.api_key = st.secrets.get("SERPAPI_API_KEY") or os.getenv("SERPAPI_API_KEY")
         if not self.api_key:
-            raise ValueError("SERPAPI_API_KEY not found in environment variables")
+            raise ValueError("SERPAPI_API_KEY not found in Streamlit secrets or environment variables")
 
     def search(self, query, num_results=5):
         

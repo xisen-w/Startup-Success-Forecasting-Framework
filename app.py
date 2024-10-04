@@ -2,6 +2,7 @@ import streamlit as st
 import sys
 import os
 import time
+import traceback
 
 # Add the project root directory to the Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -19,18 +20,18 @@ def main():
     startup_info_str = st.text_area("Enter Startup Information", height=200,
                                     help="Provide a detailed description of the startup, including information about the product, market, founders, and any other relevant details.")
 
-    # Analysis mode selection
-    mode = st.radio("Analysis Mode", ("Basic", "Advanced"))
-
     if st.button("Analyze Startup"):
         if startup_info_str:
             result_placeholder = st.empty()
-            result = analyze_startup_with_updates(framework, startup_info_str, mode, result_placeholder)
-            display_final_results(result, mode)
+            result = analyze_startup_with_updates(framework, startup_info_str, result_placeholder)
+            if result:
+                display_final_results(result, "advanced")
+            else:
+                st.error("Analysis did not complete successfully. Please check the errors above.")
         else:
             st.warning("Please enter startup information before analyzing.")
 
-def analyze_startup_with_updates(framework, startup_info_str, mode, placeholder):
+def analyze_startup_with_updates(framework, startup_info_str, placeholder):
     with placeholder.container():
         st.write("### Analysis in Progress")
         progress_bar = st.progress(0)
@@ -40,66 +41,68 @@ def analyze_startup_with_updates(framework, startup_info_str, mode, placeholder)
             status_text.text(f"Step: {step}")
             progress_bar.progress(progress)
 
-        update_status("Parsing startup information", 0.1)
-        startup_info = framework.vc_scout_agent.parse_record(startup_info_str)
-        time.sleep(0.5)  # Simulate processing time
+        result = {}
+        try:
+            update_status("Parsing startup information", 0.1)
+            startup_info = framework.vc_scout_agent.parse_record(startup_info_str)
+            st.write("Startup info parsed")
 
-        update_status("VCScout evaluation", 0.2)
-        prediction, categorization = framework.vc_scout_agent.side_evaluate(startup_info)
-        st.write(f"Initial Prediction: {prediction}")
-        time.sleep(0.5)
+            update_status("VCScout evaluation", 0.2)
+            prediction, categorization = framework.vc_scout_agent.side_evaluate(startup_info)
+            st.write(f"Initial Prediction: {prediction}")
+            result['Categorical Prediction'] = prediction
+            result['Categorization'] = categorization.dict()
 
-        update_status("Market analysis", 0.4)
-        market_analysis = framework.market_agent.analyze(startup_info.dict(), mode)
-        st.write("Market Analysis Complete")
-        time.sleep(0.5)
+            update_status("Market analysis", 0.3)
+            market_analysis = framework.market_agent.analyze(startup_info.dict(), mode="advanced")
+            st.write("Market Analysis Complete")
+            result['Market Info'] = market_analysis.dict()
 
-        update_status("Product analysis", 0.6)
-        product_analysis = framework.product_agent.analyze(startup_info.dict(), mode)
-        st.write("Product Analysis Complete")
-        time.sleep(0.5)
+            update_status("Product analysis", 0.4)
+            product_analysis = framework.product_agent.analyze(startup_info.dict(), mode="advanced")
+            st.write("Product Analysis Complete")
+            result['Product Info'] = product_analysis.dict()
 
-        update_status("Founder analysis", 0.8)
-        founder_analysis = framework.founder_agent.analyze(startup_info.dict(), mode)
-        st.write("Founder Analysis Complete")
-        time.sleep(0.5)
+            update_status("Founder analysis", 0.5)
+            founder_analysis = framework.founder_agent.analyze(startup_info.dict(), mode="advanced")
+            st.write("Founder Analysis Complete")
+            result['Founder Info'] = founder_analysis.dict()
 
-        result = {
-            'Market Info': market_analysis.dict(),
-            'Product Info': product_analysis.dict(),
-            'Founder Info': founder_analysis.dict(),
-            'Prediction': prediction,
-            'Categorization': categorization.dict()
-        }
-
-        if mode == "advanced":
-            update_status("Advanced analysis", 0.9)
+            update_status("Advanced founder analysis", 0.6)
             founder_segmentation = framework.founder_agent.segment_founder(startup_info.founder_backgrounds)
             founder_idea_fit = framework.founder_agent.calculate_idea_fit(startup_info.dict(), startup_info.founder_backgrounds)
+            st.write("Advanced Founder Analysis Complete")
             result['Founder Segmentation'] = founder_segmentation
             result['Founder Idea Fit'] = founder_idea_fit[0]
-            time.sleep(0.5)
 
-        update_status("Integrating analyses", 1.0)
-        integrated_analysis = framework.integration_agent.integrate_analyses(
-            market_analysis.dict(),
-            product_analysis.dict(),
-            founder_analysis.dict(),
-            prediction,
-            mode
-        )
-        result['Final Decision'] = integrated_analysis.dict()
+            update_status("Integration", 0.8)
+            integrated_analysis = framework.integration_agent.integrate_analyses(
+                market_analysis.dict(),
+                product_analysis.dict(),
+                founder_analysis.dict(),
+                prediction,
+                mode="advanced"
+            )
+            st.write("Integration Complete")
+            result['Final Decision'] = integrated_analysis.dict()
 
-        if mode == "advanced":
+            update_status("Quantitative decision", 0.9)
             quant_decision = framework.integration_agent.getquantDecision(
                 prediction,
                 founder_idea_fit[0],
                 founder_segmentation,
                 integrated_analysis.dict()
             )
+            st.write("Quantitative Decision Complete")
             result['Quantitative Decision'] = quant_decision.dict()
 
-        st.write("Analysis Complete!")
+            update_status("Analysis complete", 1.0)
+            st.write("Analysis Complete!")
+
+        except Exception as e:
+            st.error(f"An error occurred during analysis: {str(e)}")
+            st.write(traceback.format_exc())
+        
         return result
 
 def display_final_results(result, mode):

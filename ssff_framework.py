@@ -1,8 +1,11 @@
 import logging
+from typing import Dict, Any
+from pydantic import BaseModel
+
 from agents.market_agent import MarketAgent
 from agents.product_agent import ProductAgent
 from agents.founder_agent import FounderAgent
-from agents.vc_scout_agent import VCScoutAgent
+from agents.vc_scout_agent import VCScoutAgent, StartupInfo
 from agents.integration_agent import IntegrationAgent
 
 logging.basicConfig(level=logging.INFO)
@@ -17,141 +20,104 @@ class StartupFramework:
         self.vc_scout_agent = VCScoutAgent(model)
         self.integration_agent = IntegrationAgent(model)
 
-    def analyze_startup(self, startup_info, founder_description, mode="basic"):
+    def analyze_startup(self, startup_info_str: str, mode: str = "basic") -> Dict[str, Any]:
         logger.info(f"Starting startup analysis in {mode} mode")
 
-        # Get prediction
-        prediction = self.vc_scout_agent.side_evaluate(startup_info)
+        # Parse the input string into a StartupInfo schema
+        startup_info = self.vc_scout_agent.parse_record(startup_info_str)
+
+        print("Parse Record: ", startup_info)
+
+        # Check if parsing was successful
+        if isinstance(startup_info, dict):
+            startup_info = StartupInfo(**startup_info)
+        elif not isinstance(startup_info, StartupInfo):
+            logger.error("Failed to parse startup info")
+            return {"error": "Failed to parse startup info"}
+
+        # Get prediction and categorization
+        prediction, categorization = self.vc_scout_agent.side_evaluate(startup_info)
         logger.info(f"VCScout prediction: {prediction}")
 
-        if mode == "combined_pro":
-            # Perform advanced computations
-            founder_segmentation = self.founder_agent.segment_founder(founder_description)
-            founder_idea_fit = self.founder_agent.calculate_idea_fit(startup_info, founder_description)
-            rf_prediction = self.vc_scout_agent.get_rf_prediction(startup_info)
+        # Perform agent analyses
+        market_analysis = self.market_agent.analyze(startup_info.dict(), mode)
+        product_analysis = self.product_agent.analyze(startup_info.dict(), mode)
+        founder_analysis = self.founder_agent.analyze(startup_info.dict(), mode)
 
-            # Enhance startup_info with advanced computations
-            enhanced_startup_info = {
-                **startup_info,
-                "founder_segmentation": founder_segmentation,
-                "founder_idea_fit": founder_idea_fit,
-                "rf_prediction": rf_prediction
-            }
+        # Log the startup_info for debugging
+        logger.debug(f"Startup info: {startup_info.dict()}")
 
-            # Perform agent analyses with enhanced info
-            market_analysis = self.market_agent.analyze(enhanced_startup_info, mode="advanced")
-            product_analysis = self.product_agent.analyze(enhanced_startup_info, mode="advanced")
-            founder_analysis = self.founder_agent.analyze(enhanced_startup_info, mode="advanced")
-
-            # Add additional context to founder_analysis
-            founder_analysis += (
-                f"After modelling, the segmentation of the founder is {founder_segmentation}, "
-                f"with L1 being least likely to be successful and L5 being most likely to be successful. "
-                f"L5 founders are 3.8 times more likely to succeed than L1 founders. "
-                f"The Founder_Idea_Fit Score of this startup is measured to be {founder_idea_fit}. "
-                f"The score ranges from -1 to 1, with 1 being that the startup fits with the founder's "
-                f"background well, and -1 being the least fit."
-            )
+        if mode == "advanced":
+            founder_segmentation = self.founder_agent.segment_founder(startup_info.founder_backgrounds)
+            founder_idea_fit = self.founder_agent.calculate_idea_fit(startup_info.dict(), startup_info.founder_backgrounds)
+            rf_prediction = prediction
 
             # Integrate analyses
             integrated_analysis = self.integration_agent.integrate_analyses(
-                market_analysis, product_analysis, founder_analysis, prediction, mode
+                market_analysis.dict(),
+                product_analysis.dict(),
+                founder_analysis.dict(),
+                prediction,
+                mode
             )
 
             quant_decision = self.integration_agent.getquantDecision(
                 prediction,
-                founder_idea_fit,
+                founder_idea_fit[0],  # Assuming this returns a tuple (idea_fit, cosine_similarity)
                 founder_segmentation,
-                integrated_analysis
+                integrated_analysis.dict()
             )
 
             return {
-                'Final Decision': integrated_analysis,
-                'Market Info': market_analysis,
-                'Product Info': product_analysis,
-                'Founder Info': founder_analysis,
-                'Market Report': self.market_agent.get_market_report(),
-                'News Report': self.market_agent.get_news_report(),
+                'Final Decision': integrated_analysis.dict(),
+                'Market Info': market_analysis.dict(),
+                'Product Info': product_analysis.dict(),
+                'Founder Info': founder_analysis.dict(),
                 'Founder Segmentation': founder_segmentation,
-                'Founder Idea Fit': founder_idea_fit,
+                'Founder Idea Fit': founder_idea_fit[0],
                 'Categorical Prediction': prediction,
-                'Quantitative Decision': quant_decision,
+                'Categorization': categorization.dict(),
+                'Quantitative Decision': quant_decision.dict(),
                 'Random Forest Prediction': rf_prediction
             }
         else:
-            # Perform regular agent analyses
-            market_analysis = self.market_agent.analyze(startup_info, mode)
-            product_analysis = self.product_agent.analyze(startup_info, mode)
-            founder_analysis = self.founder_agent.analyze(startup_info, mode)
-
             # Integrate analyses
             integrated_analysis = self.integration_agent.integrate_analyses(
-                market_analysis, product_analysis, founder_analysis, prediction, mode
+                market_analysis.dict(),
+                product_analysis.dict(),
+                founder_analysis.dict(),
+                prediction,
+                mode
             )
 
-            if mode == "basic":
-                return {
-                    'Final Decision': integrated_analysis,
-                    'Market Info': market_analysis,
-                    'Product Info': product_analysis,
-                    'Founder Info': founder_analysis,
-                    'Prediction': prediction
-                }
-            elif mode == "advanced":
-                founder_segmentation = self.founder_agent.segment_founder(founder_description)
-                founder_idea_fit = self.founder_agent.calculate_idea_fit(startup_info, founder_description)
-
-                quant_decision = self.integration_agent.getquantDecision(
-                    prediction,
-                    founder_idea_fit,
-                    founder_segmentation,
-                    integrated_analysis
-                )
-
-                return {
-                    'Final Decision': integrated_analysis,
-                    'Market Info': market_analysis,
-                    'Product Info': product_analysis,
-                    'Founder Info': founder_analysis,
-                    'Founder Segmentation': founder_segmentation,
-                    'Founder Idea Fit': founder_idea_fit,
-                    'Categorical Prediction': prediction,
-                    'Quantitative Decision': quant_decision
-                }
-            else:
-                logger.error(f"Invalid mode: {mode}")
-                return None
+            return {
+                'Final Decision': integrated_analysis.dict(),
+                'Market Info': market_analysis.dict(),
+                'Product Info': product_analysis.dict(),
+                'Founder Info': founder_analysis.dict(),
+                'Prediction': prediction,
+                'Categorization': categorization.dict()
+            }
 
 def main():
     framework = StartupFramework()
     
-    startup_info = {
-        "name": "HealthTech AI",
-        "description": "AI-powered health monitoring wearable device",
-        "market_size": "$50 billion global wearable technology market",
-        "competition": "Fitbit, Apple Watch, Garmin",
-        "growth_rate": "CAGR of 15.9% from 2020 to 2027",
-        "market_trends": "Increasing health consciousness, integration of AI in healthcare",
-        "product_description": "Real-time health tracking with predictive analysis",
-        "key_features": "Real-time health tracking, Personalized AI insights, Integration with medical systems",
-        "tech_stack": "IoT sensors, Machine Learning algorithms, Cloud computing",
-        "usp": "Predictive health analysis with medical-grade accuracy",
-        "go_to_market_strategy": "B2C direct sales and partnerships with healthcare providers"
-    }
-    
-    founder_description = "MBA from Stanford, 5 years at Google as Product Manager"
+    startup_info_str = """
+    HealthTech AI is developing an AI-powered health monitoring wearable device. 
+    The global wearable technology market is estimated at $50 billion with a CAGR of 15.9% from 2020 to 2027. 
+    Key competitors include Fitbit, Apple Watch, and Garmin. 
+    The product offers real-time health tracking with predictive analysis. 
+    The founding team consists of experienced entrepreneurs with backgrounds in AI and healthcare. 
+    They've raised $2 million in seed funding to date.
+    """
 
-    basic_result = framework.analyze_startup(startup_info, founder_description, mode="basic")
+    basic_result = framework.analyze_startup(startup_info_str, mode="basic")
     print("Basic Analysis Result:")
     print(basic_result)
 
-    advanced_result = framework.analyze_startup(startup_info, founder_description, mode="advanced")
+    advanced_result = framework.analyze_startup(startup_info_str, mode="advanced")
     print("\nAdvanced Analysis Result:")
     print(advanced_result)
-
-    combined_pro_result = framework.analyze_startup(startup_info, founder_description, mode="combined_pro")
-    print("\nCombined Pro Analysis Result:")
-    print(combined_pro_result)
 
 if __name__ == "__main__":
     main()

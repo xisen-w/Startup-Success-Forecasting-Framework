@@ -4,13 +4,54 @@ import logging
 import joblib
 import pandas as pd
 from pydantic import BaseModel, Field
+from typing import Optional, Tuple
+import json
 
 # Add the project root directory to the Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
 sys.path.insert(0, project_root)
 
 from agents.base_agent import BaseAgent
+
+class StartupInfo(BaseModel):
+    name: str = Field(..., description="The official name of the startup")
+    description: str = Field(..., description="A brief overview of what the startup does")
+    market_size: Optional[str] = Field(None, description="The size of the market the startup is targeting")
+    growth_rate: Optional[str] = Field(None, description="The growth rate of the market")
+    competition: Optional[str] = Field(None, description="Key competitors in the space")
+    market_trends: Optional[str] = Field(None, description="Current trends within the market")
+    go_to_market_strategy: Optional[str] = Field(None, description="The startup's plan for entering the market")
+    product_details: Optional[str] = Field(None, description="Details about the startup's product or service")
+    technology_stack: Optional[str] = Field(None, description="Technologies used in the product")
+    scalability: Optional[str] = Field(None, description="How the product can scale")
+    user_feedback: Optional[str] = Field(None, description="Any feedback received from users")
+    product_fit: Optional[str] = Field(None, description="How well the product fits the target market")
+    founder_backgrounds: Optional[str] = Field(None, description="Background information on the founders")
+    track_records: Optional[str] = Field(None, description="The track records of the founders")
+    leadership_skills: Optional[str] = Field(None, description="Leadership skills of the team")
+    vision_alignment: Optional[str] = Field(None, description="How the team's vision aligns with the product")
+    team_dynamics: Optional[str] = Field(None, description="The dynamics within the startup team")
+    web_traffic_growth: Optional[str] = Field(None, description="Information on the growth of web traffic to the startup's site")
+    social_media_presence: Optional[str] = Field(None, description="The startup's presence on social media")
+    investment_rounds: Optional[str] = Field(None, description="Details of any investment rounds")
+    regulatory_approvals: Optional[str] = Field(None, description="Any regulatory approvals obtained")
+    patents: Optional[str] = Field(None, description="Details of any patents held by the startup")
+
+class StartupCategorization(BaseModel):
+    industry_growth: str = Field(..., description="Is the startup operating in an industry experiencing growth? [Yes/No/N/A]")
+    market_size: str = Field(..., description="Is the target market size for the startup's product/service considered large? [Small/Medium/Large/N/A]")
+    development_pace: str = Field(..., description="Does the startup demonstrate a fast pace of development compared to competitors? [Slower/Same/Faster/N/A]")
+    market_adaptability: str = Field(..., description="Is the startup considered adaptable to market changes? [Not Adaptable/Somewhat Adaptable/Very Adaptable/N/A]")
+    execution_capabilities: str = Field(..., description="How would you rate the startup's execution capabilities? [Poor/Average/Excellent/N/A]")
+    funding_amount: str = Field(..., description="Has the startup raised a significant amount of funding in its latest round? [Below Average/Average/Above Average/N/A]")
+    valuation_change: str = Field(..., description="Has the startup's valuation increased with time? [Decreased/Remained Stable/Increased/N/A]")
+    investor_backing: str = Field(..., description="Are well-known investors or venture capital firms backing the startup? [Unknown/Recognized/Highly Regarded/N/A]")
+    reviews_testimonials: str = Field(..., description="Are the reviews and testimonials for the startup predominantly positive? [Negative/Mixed/Positive/N/A]")
+    product_market_fit: str = Field(..., description="Do market surveys indicate a strong product-market fit for the startup? [Weak/Moderate/Strong/N/A]")
+    sentiment_analysis: str = Field(..., description="Does the sentiment analysis of founder and company descriptions suggest high positivity? [Negative/Neutral/Positive/N/A]")
+    innovation_mentions: str = Field(..., description="Are terms related to innovation frequently mentioned in the company's public communications? [Rarely/Sometimes/Often/N/A]")
+    cutting_edge_technology: str = Field(..., description="Does the startup mention cutting-edge technology in its descriptions? [No/Mentioned/Emphasized/N/A]")
+    timing: str = Field(..., description="Considering the startup's industry and current market conditions, is the timing for the startup's product or service right? [Too Early/Just Right/Too Late/N/A]")
 
 class StartupEvaluation(BaseModel):
     market_opportunity: str = Field(..., description="Assessment of the market opportunity")
@@ -21,22 +62,6 @@ class StartupEvaluation(BaseModel):
     investment_recommendation: str = Field(None, description="Investment recommendation: 'Invest' or 'Pass'")
     confidence: float = Field(None, description="Confidence level in the recommendation (0 to 1)")
     rationale: str = Field(None, description="Brief explanation for the recommendation")
-
-class StartupAnalysisResponses(BaseModel):
-    industry_growth: str = Field(..., description="Is the startup operating in an industry experiencing growth?")
-    market_size: str = Field(..., description="Is the target market size for the startup's product/service considered large?")
-    development_pace: str = Field(..., description="Does the startup demonstrate a fast pace of development compared to competitors?")
-    market_adaptability: str = Field(..., description="Is the startup considered adaptable to market changes?")
-    execution_capabilities: str = Field(..., description="How would you rate the startup's execution capabilities?")
-    funding_amount: str = Field(..., description="Has the startup raised a significant amount of funding in its latest round?")
-    valuation_change: str = Field(..., description="Has the startup's valuation increased with time?")
-    investor_backing: str = Field(..., description="Are well-known investors or venture capital firms backing the startup?")
-    reviews_testimonials: str = Field(..., description="Are the reviews and testimonials for the startup predominantly positive?")
-    product_market_fit: str = Field(..., description="Do market surveys indicate a strong product-market fit for the startup?")
-    sentiment_analysis: str = Field(..., description="Does the sentiment analysis of founder and company descriptions suggest high positivity?")
-    innovation_mentions: str = Field(..., description="Are terms related to innovation frequently mentioned in the company's public communications?")
-    cutting_edge_technology: str = Field(..., description="Does the startup mention cutting-edge technology in its descriptions?")
-    timing: str = Field(..., description="Considering the startup's industry and current market conditions, is the timing for the startup's product or service right?")
 
 class VCScoutAgent(BaseAgent):
     def __init__(self, model="gpt-4o-mini"):
@@ -52,9 +77,31 @@ class VCScoutAgent(BaseAgent):
         self.encoder = joblib.load(os.path.join(project_root, 'models/trained_encoder_RF.joblib'))
         self.model_random_forest = joblib.load(os.path.join(project_root,'models/random_forest_classifier.joblib'))
 
-    def evaluate(self, startup_info, mode):
+    def parse_record(self, startup_info: str) -> StartupInfo:
+        """
+        Convert a string description of a startup into a StartupInfo schema.
+        """
+        self.logger.info("Parsing startup information into StartupInfo schema")
+        prompt = """
+        Convert the following startup description into a detailed JSON structure that matches the StartupInfo schema. 
+        Include as many fields as possible based on the information provided in the description.
+        If information for a field is not available, omit that field from the JSON.
+        Pay special attention to product details, technology stack, and any information about the product's unique features or market fit.
+ 
+        Startup description:
+        {startup_info}
+        """  
+        try:
+            startup_info_dict = self.get_json_response(StartupInfo, prompt, startup_info)
+            self.logger.debug(f"Parsed startup info: {startup_info_dict}")
+            return startup_info_dict  # Return the dictionary directly
+        except Exception as e:
+            self.logger.error(f"Error parsing startup info: {str(e)}")
+            return StartupInfo(name="Error", description="Failed to parse startup info")
+
+    def evaluate(self, startup_info: StartupInfo, mode: str) -> StartupEvaluation:
         self.logger.info(f"Starting startup evaluation in {mode} mode")
-        startup_info_str = self._get_startup_info(startup_info)
+        startup_info_str = startup_info.json()
         self.logger.debug(f"Startup info: {startup_info_str}")
         
         if mode == "basic":
@@ -66,141 +113,94 @@ class VCScoutAgent(BaseAgent):
         
         return analysis
 
-    def side_evaluate(self, startup_info):
+    def side_evaluate(self, startup_info: StartupInfo) -> Tuple[str, StartupCategorization]:
         self.logger.info("Starting side evaluation")
-        system_content = """
-        As an analyst specializing in startup evaluation, your task is to categorize startups based on specific criteria related to their market, financial performance, product, team, funding, customer feedback, operational efficiency, and technological innovation. For each of the following questions, please provide a categorical response: 'Yes', 'No', 'N/A', 'Small', 'Medium', 'Large', 'Slower', 'Same', 'Faster', 'Not Adaptable', 'Somewhat Adaptable', 'Very Adaptable', 'Poor', 'Average', 'Excellent', 'Below Average', 'Above Average', 'Decreased', 'Remained Stable', 'Increased', 'Unknown', 'Recognized', 'Highly Regarded', 'Negative', 'Mixed', 'Positive', 'Weak', 'Moderate', 'Strong', 'Less Efficient', 'Efficient', 'More Efficient', 'Higher', 'Same', 'Lower', 'Fragile', 'Adequate', 'Robust', 'Rarely', 'Sometimes', 'Often', 'No', 'Mentioned', 'Emphasized', 'Too Early', 'Just Right', 'Too Late'.
+        startup_info_str = startup_info.json()
+        categorization = self.get_json_response(StartupCategorization, self._get_categorization_prompt(), startup_info_str)
+        self.logger.info("Categorization completed")
 
-        Think step by step and analyze with reasoning. Think critically and analyze carefully. But do not generate anything other than the JSON itself. 
+        # Validate the categorization
+        # for field, value in categorization:
+        #     expected_values = StartupCategorization.__fields__[field].field_info.description.split('[')[1].split(']')[0].split('/')
+        #     if value not in expected_values:
+        #         self.logger.warning(f"Unexpected value '{value}' for field '{field}'. Expected one of {expected_values}. Setting to 'N/A'.")
+        #         setattr(categorization, field, 'N/A')
 
-        Provide your analysis in the following JSON format:
-        {
-          "industry_growth": "<Your response>",
-          "market_size": "<Your response>",
-          "development_pace": "<Your response>",
-          "market_adaptability": "<Your response>",
-          "execution_capabilities": "<Your response>",
-          "funding_amount": "<Your response>",
-          "valuation_change": "<Your response>",
-          "investor_backing": "<Your response>",
-          "reviews_testimonials": "<Your response>",
-          "product_market_fit": "<Your response>",
-          "sentiment_analysis": "<Your response>",
-          "innovation_mentions": "<Your response>",
-          "cutting_edge_technology": "<Your response>",
-          "timing": "<Your response>"
-        }
+        prediction = self._predict(categorization)
+        self.logger.info(f"Prediction: {prediction}")
 
-        Ensure that your response is a valid JSON object and includes all the fields mentioned above.
-        """
-        
-        categories = self.get_json_response(StartupAnalysisResponses, system_content, startup_info)
-        self.logger.info("Categories & Result: %s", categories)
+        return prediction, categorization
 
-        # The adjusted category mappings with 'Mismatch' included
+    def _predict(self, categorization: StartupCategorization) -> str:
         category_mappings = {
-            "industry_growth": ["No", "N/A", "Yes", "Mismatch"],
-            "market_size": ["Small", "Medium", "Large", "N/A", "Mismatch"],
-            "development_pace": ["Slower", "Same", "Faster", "N/A", "Mismatch"],
-            "market_adaptability": ["Not Adaptable", "Somewhat Adaptable", "Very Adaptable", "N/A", "Mismatch"],
-            "execution_capabilities": ["Poor", "Average", "Excellent", "N/A", "Mismatch"],
-            "funding_amount": ["Below Average", "Average", "Above Average", "N/A", "Mismatch"],
-            "valuation_change": ["Decreased", "Remained Stable", "Increased", "N/A", "Mismatch"],
-            "investor_backing": ["Unknown", "Recognized", "Highly Regarded", "N/A", "Mismatch"],
-            "reviews_testimonials": ["Negative", "Mixed", "Positive", "N/A", "Mismatch"],
-            "product_market_fit": ["Weak", "Moderate", "Strong", "N/A", "Mismatch"],
-            "sentiment_analysis": ["Negative", "Neutral", "Positive", "N/A", "Mismatch"],
-            "innovation_mentions": ["Rarely", "Sometimes", "Often", "N/A", "Mismatch"],
-            "cutting_edge_technology": ["No", "Mentioned", "Emphasized", "N/A", "Mismatch"],
-            "timing": ["Too Early", "Just Right", "Too Late", "N/A", "Mismatch"]
+            "industry_growth": ["No", "N/A", "Yes"],
+            "market_size": ["Small", "Medium", "Large", "N/A"],
+            "development_pace": ["Slower", "Same", "Faster", "N/A"],
+            "market_adaptability": ["Not Adaptable", "Somewhat Adaptable", "Very Adaptable", "N/A"],
+            "execution_capabilities": ["Poor", "Average", "Excellent", "N/A"],
+            "funding_amount": ["Below Average", "Average", "Above Average", "N/A"],
+            "valuation_change": ["Decreased", "Remained Stable", "Increased", "N/A"],
+            "investor_backing": ["Unknown", "Recognized", "Highly Regarded", "N/A"],
+            "reviews_testimonials": ["Negative", "Mixed", "Positive", "N/A"],
+            "product_market_fit": ["Weak", "Moderate", "Strong", "N/A"],
+            "sentiment_analysis": ["Negative", "Neutral", "Positive", "N/A"],
+            "innovation_mentions": ["Rarely", "Sometimes", "Often", "N/A"],
+            "cutting_edge_technology": ["No", "Mentioned", "Emphasized", "N/A"],
+            "timing": ["Too Early", "Just Right", "Too Late", "N/A"]
         }
 
-        # The order of features as used during training
         feature_order = list(category_mappings.keys())
+        encoded_features = self.encoder.transform(pd.DataFrame([categorization.dict()]))
+        prediction = self.model_random_forest.predict(encoded_features)
 
-        # Call the function with our special encoder & trained model
-        prediction = self.preprocess_and_predict(categories.dict(), category_mappings, self.encoder, self.model_random_forest, feature_order)
-
-        if prediction[0] == 1:
-            prediction = "Successful"
-        else:
-            prediction = "Unsuccessful"
-
-        self.logger.info("Prediction: %s", prediction)
-        return prediction
-
-    def preprocess_and_predict(self, single_instance, category_mappings, encoder_special, model, feature_order):
-        # Convert single instance dictionary into DataFrame
-        single_instance_df = pd.DataFrame([single_instance])
-
-        # Preprocess single_instance_df to match training feature names and order
-        for column in feature_order:
-            if column not in single_instance_df:
-                single_instance_df[column] = "Mismatch"  # Add missing columns as "Mismatch"
-
-        # Ensure DataFrame columns are in the same order as during training
-        single_instance_df = single_instance_df[feature_order]
-
-        # Replace categories not in mappings with "Mismatch"
-        for column, categories in category_mappings.items():
-            single_instance_df[column] = single_instance_df[column].apply(lambda x: x if x in categories else "Mismatch")
-
-        self.logger.debug("Encoder categories: %s", encoder_special.categories_)
-        # Encode the single instance using the trained OrdinalEncoder
-        single_instance_encoded = encoder_special.transform(single_instance_df)
-
-        # Use the trained model to predict
-        prediction = model.predict(single_instance_encoded)
-
-        return prediction
-
-    def _get_startup_info(self, startup_info):
-        return f"Startup Name: {startup_info.get('name', '')}\n" \
-               f"Description: {startup_info.get('description', '')}\n" \
-               f"Market Size: {startup_info.get('market_size', '')}\n" \
-               f"Competition: {startup_info.get('competition', '')}\n" \
-               f"Growth Rate: {startup_info.get('growth_rate', '')}\n" \
-               f"Market Trends: {startup_info.get('market_trends', '')}\n" \
-               f"Product Description: {startup_info.get('product_description', '')}\n" \
-               f"Founding Team: {startup_info.get('founding_team', '')}\n" \
-               f"Funding Stage: {startup_info.get('funding_stage', '')}\n" \
-               f"Funding Amount: {startup_info.get('funding_amount', '')}"
+        return "Successful" if prediction[0] == 1 else "Unsuccessful"
 
     def _get_basic_evaluation_prompt(self):
         return """
-        As an experienced VC scout, evaluate the overall potential of this startup based on the following information:
+        As an experienced VC scout, evaluate the startup based on the following information:
         {startup_info}
 
-        Provide your evaluation in the following JSON format:
-        {
-            "market_opportunity": "Your detailed assessment of the market opportunity",
-            "product_innovation": "Your comprehensive evaluation of the product innovation",
-            "founding_team": "Your thorough analysis of the founding team",
-            "potential_risks": "Your identification of potential risks",
-            "overall_potential": <integer between 1 and 10 representing the overall potential>
-        }
-
-        Ensure that your response is a valid JSON object and includes all the fields mentioned above.
+        Provide a comprehensive analysis including market opportunity, product innovation, founding team, and potential risks.
+        Conclude with an overall potential score from 1 to 10.
         """
 
     def _get_advanced_evaluation_prompt(self):
         return """
-        As an experienced VC scout, provide a comprehensive evaluation of this startup and an investment recommendation based on the following information:
+        As an experienced VC scout, provide an in-depth evaluation of the startup based on the following information:
         {startup_info}
 
-        Provide your evaluation and recommendation in the following JSON format:
-        {
-            "market_opportunity": "Your detailed assessment of the market opportunity",
-            "product_innovation": "Your comprehensive evaluation of the product innovation",
-            "founding_team": "Your thorough analysis of the founding team",
-            "potential_risks": "Your identification of potential risks",
-            "overall_potential": <integer between 1 and 10 representing the overall potential>,
-            "investment_recommendation": "<Either 'Invest' or 'Pass'>",
-            "confidence": <float between 0 and 1 representing your confidence in the recommendation>,
-            "rationale": "Your brief explanation for the investment recommendation"
-        }
+        Provide a comprehensive analysis including market opportunity, product innovation, founding team, and potential risks.
+        Conclude with an overall potential score from 1 to 10, an investment recommendation (Invest or Pass), 
+        a confidence level in your recommendation (0 to 1), and a brief rationale for your decision.
+        """
 
-        Ensure that your response is a valid JSON object and includes all the fields mentioned above.
+    def _get_categorization_prompt(self):
+        return """
+        As an analyst specializing in startup evaluation, categorize the given startup based on the following criteria.
+        Provide a categorical response for each of the following questions based on the startup information provided.
+        Use ONLY the specified categorical responses for each field. Do not use any other responses.
+
+        1. Industry Growth: [Yes/No/N/A]
+        2. Market Size: [Small/Medium/Large/N/A]
+        3. Development Pace: [Slower/Same/Faster/N/A]
+        4. Market Adaptability: [Not Adaptable/Somewhat Adaptable/Very Adaptable/N/A]
+        5. Execution Capabilities: [Poor/Average/Excellent/N/A]
+        6. Funding Amount: [Below Average/Average/Above Average/N/A]
+        7. Valuation Change: [Decreased/Remained Stable/Increased/N/A]
+        8. Investor Backing: [Unknown/Recognized/Highly Regarded/N/A]
+        9. Reviews and Testimonials: [Negative/Mixed/Positive/N/A]
+        10. Product-Market Fit: [Weak/Moderate/Strong/N/A]
+        11. Sentiment Analysis: [Negative/Neutral/Positive/N/A]
+        12. Innovation Mentions: [Rarely/Sometimes/Often/N/A]
+        13. Cutting-Edge Technology: [No/Mentioned/Emphasized/N/A]
+        14. Timing: [Too Early/Just Right/Too Late/N/A]
+
+        Provide your analysis in a JSON format that matches the StartupCategorization schema.
+        If you cannot determine a category based on the given information, use 'N/A'.
+        Do not include any explanations or additional text outside of the JSON structure.
+
+        Startup Information:
+        {startup_info}
         """
 
 if __name__ == "__main__":
@@ -214,20 +214,20 @@ if __name__ == "__main__":
         agent = VCScoutAgent()
 
         # Test startup info
-        startup_info = {
-            "name": "HealthTech AI",
-            "description": "AI-powered health monitoring wearable device",
-            "market_size": "$50 billion global wearable technology market",
-            "competition": "Fitbit, Apple Watch, Garmin",
-            "growth_rate": "CAGR of 15.9% from 2020 to 2027",
-            "market_trends": "Increasing health consciousness, integration of AI in healthcare",
-            "product_description": "Real-time health tracking with predictive analysis",
-            "founding_team": "Experienced entrepreneurs with backgrounds in AI and healthcare",
-            "funding_stage": "Seed",
-            "funding_amount": "$2 million raised to date"
-        }
+        startup_info_str = """
+        HealthTech AI is developing an AI-powered health monitoring wearable device. 
+        The global wearable technology market is estimated at $50 billion with a CAGR of 15.9% from 2020 to 2027. 
+        Key competitors include Fitbit, Apple Watch, and Garmin. 
+        The product offers real-time health tracking with predictive analysis. 
+        The founding team consists of experienced entrepreneurs with backgrounds in AI and healthcare. 
+        They've raised $2 million in seed funding to date.
+        """
 
-        startup_info = agent._get_startup_info(startup_info)
+        # Test parse_record
+        print("Parsing Startup Info:")
+        startup_info = agent.parse_record(startup_info_str)
+        print(startup_info)
+        print()
 
         # Test basic evaluation
         print("Basic Evaluation:")
@@ -243,8 +243,10 @@ if __name__ == "__main__":
 
         # Test side evaluation
         print("Side Evaluation:")
-        side_evaluation = agent.side_evaluate(startup_info)
-        print(side_evaluation)
+        prediction, categorization = agent.side_evaluate(startup_info)
+        print(f"Prediction: {prediction}")
+        print("Categorization:")
+        print(categorization)
 
     # Run the test function
     test_vc_scout_agent()

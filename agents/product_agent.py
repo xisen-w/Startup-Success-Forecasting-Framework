@@ -32,6 +32,17 @@ class ProductAgent(BaseAgent):
         product_info = self._get_product_info(startup_info)
         self.logger.debug(f"Product info: {product_info}")
         
+        if not product_info.strip():
+            self.logger.warning("No product information available")
+            return ProductAnalysis(
+                features_analysis="No information available",
+                tech_stack_evaluation="No information available",
+                usp_assessment="No information available",
+                potential_score=0,
+                innovation_score=0,
+                market_fit_score=0
+            )
+        
         analysis = self.get_json_response(ProductAnalysis, self._get_analysis_prompt(), product_info)
         self.logger.info("Basic analysis completed")
         
@@ -46,10 +57,10 @@ class ProductAgent(BaseAgent):
         return analysis
 
     def _get_product_info(self, startup_info):
-        return f"Product Description: {startup_info.get('product_description', '')}\n" \
-               f"Key Features: {startup_info.get('key_features', '')}\n" \
-               f"Technology Stack: {startup_info.get('tech_stack', '')}\n" \
-               f"Unique Selling Proposition: {startup_info.get('usp', '')}"
+        return f"Product Description: {startup_info.get('product_details', '')}\n" \
+               f"Key Features: {startup_info.get('product_details', '')}\n" \
+               f"Technology Stack: {startup_info.get('technology_stack', '')}\n" \
+               f"Unique Selling Proposition: {startup_info.get('product_fit', '')}"
 
     def _assess_innovation(self, product_info):
         self.logger.info("Assessing innovation")

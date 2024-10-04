@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 
 # Add the project root directory to the Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -20,14 +21,27 @@ class MarketAgent(BaseAgent):
     def __init__(self, model="gpt-4o-mini"):
         super().__init__(model)
         self.search_api = GoogleSearchAPI()
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
 
     def analyze(self, startup_info, mode):
+        self.logger.info(f"Starting market analysis in {mode} mode")
         market_info = self._get_market_info(startup_info)
+        self.logger.debug(f"Market info: {market_info}")
+        
         analysis = self.get_json_response(MarketAnalysis, self._get_analysis_prompt(), market_info)
+        self.logger.info("Basic analysis completed")
         
         if mode == "advanced":
+            self.logger.info("Starting advanced analysis")
             external_knowledge = self._get_external_knowledge(startup_info)
+            self.logger.debug(f"External knowledge: {external_knowledge}")
             advanced_analysis = self.get_json_response(MarketAnalysis, self._get_advanced_analysis_prompt(), f"{market_info}\n\nAdditional Information:\n{external_knowledge}")
+            self.logger.info("Advanced analysis completed")
             return advanced_analysis
         
         return analysis
@@ -39,8 +53,11 @@ class MarketAgent(BaseAgent):
                f"Market Trends: {startup_info.get('market_trends', '')}"
 
     def _get_external_knowledge(self, startup_info):
+        self.logger.info("Gathering external knowledge")
         keywords = self._generate_keywords(startup_info)
+        self.logger.debug(f"Generated keywords: {keywords}")
         search_results = self.search_api.search(keywords)
+        self.logger.debug(f"Search results: {search_results}")
         return self._synthesize_knowledge(search_results)
 
     def _generate_keywords(self, startup_info):
@@ -78,6 +95,11 @@ class MarketAgent(BaseAgent):
 
 if __name__ == "__main__":
     def test_market_agent():
+        # Configure logging for the test function
+        logging.basicConfig(level=logging.INFO)
+        logger = logging.getLogger(__name__)
+
+        logger.info("Starting MarketAgent test")
         # Create a MarketAgent instance
         agent = MarketAgent()
 

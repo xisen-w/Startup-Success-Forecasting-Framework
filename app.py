@@ -47,7 +47,8 @@ def main():
             st.write(f"Strengths: {analysis.strengths}")
             st.write(f"Challenges: {analysis.challenges}")
             st.write(f"Segmentation: {analysis.segmentation}")
-            st.write(f"Idea Fit Score: {analysis.idea_fit:.2f}")
+            st.write(f"Cosine Similarity: {analysis.cosine_similarity:.4f}")
+            st.write(f"Idea Fit Score: {analysis.idea_fit:.4f}")
 
 if __name__ == "__main__":
     main()

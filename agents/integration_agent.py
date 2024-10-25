@@ -15,6 +15,7 @@ class IntegratedAnalysis(BaseModel):
     strengths: list[str] = Field(..., description="List of key strengths")
     weaknesses: list[str] = Field(..., description="List of potential weaknesses")
     recommendation: str = Field(..., description="A brief recommendation for next steps")
+    outcome: str = Field(..., description="The outcome for prediction: 'Successful' or 'Unsuccessful' ")
 
 class QuantitativeDecision(BaseModel):
     outcome: str = Field(..., description="Predicted outcome: 'Successful' or 'Unsuccessful'")
@@ -111,7 +112,8 @@ class IntegrationAgent(BaseAgent):
         3. Strengths: A list of key strengths identified across all analyses.
         4. Weaknesses: A list of potential weaknesses or challenges identified.
         5. Recommendation: A brief recommendation for next steps, whether to invest or not, and any conditions or areas for further investigation.
-
+        6. Prediction: A final decision: successful or unsuccessful
+        
         Ensure that your response is a valid JSON object and includes all the fields mentioned above.
         """
 

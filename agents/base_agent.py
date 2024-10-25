@@ -11,6 +11,10 @@ class BaseAgent:
     def __init__(self, model="gpt-4o-mini"):
         self.model = model
         self.openai_api = OpenAIAPI(model)
+        self.secrets = os.environ
+    
+    def _get_secret(self, key, default=None):
+        return self.secrets.get(key, default)
 
     def get_response(self, system_content, user_content):
         return self.openai_api.get_completion(system_content, user_content)

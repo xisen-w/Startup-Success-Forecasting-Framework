@@ -10,7 +10,7 @@ sys.path.insert(0, project_root)
 from agents.base_agent import BaseAgent
 
 class IntegratedAnalysis(BaseModel):
-    overall_score: float = Field(..., description="Overall score between 1 and 10")
+    overall_score: float = Field(..., description="Overall score between 1 and 10, 10 being the best")
     summary: str = Field(..., description="A brief summary of the startup's potential")
     strengths: list[str] = Field(..., description="List of key strengths")
     weaknesses: list[str] = Field(..., description="List of potential weaknesses")
@@ -32,15 +32,19 @@ class IntegrationAgent(BaseAgent):
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
 
-    def integrate_analyses(self, market_info, product_info, founder_info, prediction=None, mode="basic"):
+    def integrate_analyses(self, market_info, product_info, founder_info, prediction, 
+                           founder_idea_fit, founder_segmentation, rf_prediction, 
+                           categorization, mode="basic"):
         self.logger.info(f"Starting integration of analyses in {mode} mode")
         
         combined_info = f"Market Analysis:\n{market_info}\n\n" \
                         f"Product Analysis:\n{product_info}\n\n" \
-                        f"Founder Analysis:\n{founder_info}"
-        
-        if mode == "advanced" and prediction is not None:
-            combined_info += f"\n\nPrediction: {prediction}"
+                        f"Founder Analysis:\n{founder_info}\n\n" \
+                        f"Prediction: {prediction}\n" \
+                        f"Founder-Idea Fit: {founder_idea_fit}\n" \
+                        f"Founder Segmentation: {founder_segmentation}\n" \
+                        f"Random Forest Prediction: {rf_prediction}\n" \
+                        f"Categorization: {categorization}"
         
         self.logger.debug(f"Combined info: {combined_info}")
         
@@ -104,22 +108,25 @@ class IntegrationAgent(BaseAgent):
         {combined_info}
 
         Synthesize the information and provide an overall assessment of the startup's potential.
+        Consider all provided predictions and analyses, including the Founder-Idea Fit, Founder Segmentation, 
+        Random Forest Prediction, and Categorization.
         Score each aspect from 1 to 10 (10 is the best & most competitive). Specify the score to 2 digits and give very strong justification for it.
 
         Your response should be structured as follows:
         1. Overall Score: A number between 1 and 10, calculated as a weighted average of the individual scores.
-        2. Summary: A brief summary of the startup's potential, highlighting key points from each analysis.
+        2. Summary: A brief summary of the startup's potential, highlighting key points from each analysis and prediction.
         3. Strengths: A list of key strengths identified across all analyses.
         4. Weaknesses: A list of potential weaknesses or challenges identified.
         5. Recommendation: A brief recommendation for next steps, whether to invest or not, and any conditions or areas for further investigation.
-        6. Prediction: A final decision: successful or unsuccessful
+        6. Prediction: A final decision: successful or unsuccessful, considering all provided predictions and analyses.
         
         Ensure that your response is a valid JSON object and includes all the fields mentioned above.
         """
 
         if mode == "advanced":
             base_prompt += """
-            Additionally, consider the provided prediction in your analysis. While this prediction has 65% accuracy, use it as a supplementary data point rather than the primary basis for your recommendation.
+            Additionally, provide a brief explanation of how the various predictions (LLM, Random Forest, Founder-Idea Fit, 
+            Founder Segmentation) influenced your final assessment and recommendation.
             """
 
         return base_prompt

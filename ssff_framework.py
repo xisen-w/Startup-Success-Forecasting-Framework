@@ -53,11 +53,15 @@ class StartupFramework:
 
         # Integrate analyses
         integrated_analysis = self.integration_agent.integrate_analyses(
-            market_analysis.dict(),
-            product_analysis.dict(),
-            founder_analysis.dict(),
-            prediction,
-            "advanced"
+            market_info=market_analysis.dict(),
+            product_info=product_analysis.dict(),
+            founder_info=founder_analysis.dict(),
+            prediction=prediction,
+            founder_idea_fit=founder_idea_fit[0],
+            founder_segmentation=founder_segmentation,
+            rf_prediction=rf_prediction,
+            categorization=categorization.dict(),
+            mode="advanced"
         )
 
         quant_decision = self.integration_agent.getquantDecision(
@@ -68,16 +72,17 @@ class StartupFramework:
         )
 
         return {
-            'Final Decision': integrated_analysis.dict(),
-            'Market Info': market_analysis.dict(),
-            'Product Info': product_analysis.dict(),
-            'Founder Info': founder_analysis.dict(),
+            'Final Analysis': integrated_analysis.dict(),
+            'Market Analysis': market_analysis.dict(),
+            'Product Analysis': product_analysis.dict(),
+            'Founder Analysis': founder_analysis.dict(),
             'Founder Segmentation': founder_segmentation,
             'Founder Idea Fit': founder_idea_fit[0],
             'Categorical Prediction': prediction,
             'Categorization': categorization.dict(),
             'Quantitative Decision': quant_decision.dict(),
-            'Random Forest Prediction': rf_prediction
+            'Random Forest Prediction': rf_prediction,
+            'Startup Info': startup_info.dict()
         }
 
 def main():

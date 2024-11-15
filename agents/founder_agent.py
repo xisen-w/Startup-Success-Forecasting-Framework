@@ -14,13 +14,15 @@ from pydantic import BaseModel, Field
 
 class FounderAnalysis(BaseModel):
     competency_score: int = Field(..., description="Founder competency score on a scale of 1 to 10")
-    strengths: str = Field(..., description="Key strengths of the founding team")
-    challenges: str = Field(..., description="Potential challenges for the founding team")
+    analysis: str = Field(..., description="Detailed analysis of the founding team, including strengths and challenges.")
 
 class AdvancedFounderAnalysis(FounderAnalysis):
-    segmentation: str = Field(..., description="Founder segmentation level")
+    segmentation: int = Field(..., description="Founder segmentation level. 1-5. 1 is L1, 5 is L5")
     cosine_similarity: float = Field(..., description="The cosine similarity between founder's desc and startup info.")
     idea_fit: float = Field(..., description="Idea fit score")
+
+class FounderSegmentation(BaseModel):
+    segmentation: int = Field(..., description="Founder segmentation level. 1-5. 1 is L1, 5 is L5")
 
 class FounderAgent(BaseAgent):
     def __init__(self, model="gpt-4o-mini"):
@@ -51,7 +53,7 @@ class FounderAgent(BaseAgent):
                f"Vision and Alignment: {startup_info.get('vision_alignment', '')}"
 
     def segment_founder(self, founder_info):
-        return self.get_response(self._get_segmentation_prompt(), founder_info)
+        return self.get_json_response(FounderSegmentation, self._get_segmentation_prompt(), founder_info).segmentation
 
     def calculate_idea_fit(self, startup_info, founder_info):
         founder_embedding = self.openai_api.get_embeddings(founder_info)
@@ -77,7 +79,7 @@ class FounderAgent(BaseAgent):
         return """
         As a highly qualified analyst specializing in startup founder assessment, evaluate the founding team based on the provided information.
         Consider the founders' educational background, industry experience, leadership capabilities, and their ability to align and execute on the company's vision.
-        Provide a competency score, key strengths, and potential challenges.
+        Provide a competency score, key strengths, and potential challenges. Please write in great details.
         """
 
     def _get_segmentation_prompt(self):

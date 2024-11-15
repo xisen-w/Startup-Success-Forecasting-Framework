@@ -11,11 +11,9 @@ from agents.base_agent import BaseAgent
 
 class IntegratedAnalysis(BaseModel):
     overall_score: float = Field(..., description="Overall score between 1 and 10, 10 being the best")
-    summary: str = Field(..., description="A brief summary of the startup's potential")
-    strengths: list[str] = Field(..., description="List of key strengths")
-    weaknesses: list[str] = Field(..., description="List of potential weaknesses")
+    IntegratedAnalysis: str = Field(..., description="A comprehensive analysis of the startup from the perspective of the venture capital firm, after integrating all the information")
     recommendation: str = Field(..., description="A brief recommendation for next steps")
-    outcome: str = Field(..., description="The outcome for prediction: 'Successful' or 'Unsuccessful' ")
+    outcome: str = Field(..., description="The outcome for prediction: 'Invest' or 'Hold' ")
 
 class QuantitativeDecision(BaseModel):
     outcome: str = Field(..., description="Predicted outcome: 'Successful' or 'Unsuccessful'")
@@ -32,28 +30,98 @@ class IntegrationAgent(BaseAgent):
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
 
-    def integrate_analyses(self, market_info, product_info, founder_info, prediction, 
-                           founder_idea_fit, founder_segmentation, rf_prediction, 
-                           categorization, mode="basic"):
-        self.logger.info(f"Starting integration of analyses in {mode} mode")
+    def integrated_analysis_basic(self, market_info, product_info, founder_info):
+        self.logger.info("Starting basic integrated analysis")
         
-        combined_info = f"Market Analysis:\n{market_info}\n\n" \
-                        f"Product Analysis:\n{product_info}\n\n" \
-                        f"Founder Analysis:\n{founder_info}\n\n" \
-                        f"Prediction: {prediction}\n" \
-                        f"Founder-Idea Fit: {founder_idea_fit}\n" \
-                        f"Founder Segmentation: {founder_segmentation}\n" \
-                        f"Random Forest Prediction: {rf_prediction}\n" \
-                        f"Categorization: {categorization}"
+        prompt = """
+        Imagine you are the chief analyst at a venture capital firm, tasked with integrating the analyses of three specialized teams to provide a comprehensive investment insight. Your output should be structured with detailed scores and justifications:
         
-        self.logger.debug(f"Combined info: {combined_info}")
+        Example 1:
+        Market Viability: 8.23/10 - The market is on the cusp of a regulatory shift that could open up new demand channels, supported by consumer trends favoring sustainability. Despite the overall growth, regulatory uncertainty poses a potential risk.
+        Product Viability: 7.36/10 - The product introduces an innovative use of AI in renewable energy management, which is patent-pending. However, it faces competition from established players with deeper market penetration and brand recognition.
+        Founder Competency: 9.1/10 - The founding team comprises industry veterans with prior successful exits and a strong network in the energy sector. Their track record includes scaling similar startups and navigating complex regulatory landscapes.
         
-        integrated_analysis = self.get_json_response(IntegratedAnalysis, self._get_integration_prompt(mode), combined_info)
-        self.logger.info("Integration completed")
+        Recommendation: Invest. The team's deep industry expertise and innovative product position it well to capitalize on the market's regulatory changes. Although competition is stiff, the founders' experience and network provide a competitive edge crucial for market adoption and navigating potential regulatory hurdles.
+        
+        Example 2:
+        Market Viability: 5.31/10 - The market for wearable tech is saturated, with slow growth projections. However, there exists a niche but growing interest in wearables for pet health.
+        Product Viability: 6.5/10 - The startup's product offers real-time health monitoring for pets, a feature not widely available in the current market. Yet, the product faces challenges with high production costs and consumer skepticism about the necessity of such a device.
+        Founder Competency: 6.39/10 - The founding team includes passionate pet lovers with backgrounds in veterinary science and tech development. While they possess the technical skills and passion for the project, their lack of business and scaling experience is a concern.
+        
+        Recommendation: Hold. The unique product offering taps into an emerging market niche, presenting a potential opportunity. However, the combination of a saturated broader market, challenges in justifying the product's value to consumers, and the team's limited experience in business management suggests waiting for clearer signs of product-market fit and strategic direction.
+        
+        Now, analyze the following:
+        
+        Market Viability: {market_info}
+        Product Viability: {product_info}
+        Founder Competency: {founder_info}
+        
+        Provide an overall investment recommendation based on these inputs. State whether you would advise 'Invest' or 'Hold', including a comprehensive rationale for your decision.
+        """
+        
+        user_prompt = prompt.format(
+            market_info=market_info,
+            product_info=product_info,
+            founder_info=founder_info
+        )
+        
+        integrated_analysis = self.get_json_response(IntegratedAnalysis, user_prompt, "Be professional.")
+        self.logger.info("Basic integrated analysis completed")
         
         return integrated_analysis
 
-    def getquantDecision(self, prediction, Founder_Idea_Fit, Founder_Segmentation, final_decision):
+    def integrated_analysis_pro(self, market_info, product_info, founder_info, founder_idea_fit, founder_segmentation, rf_prediction):
+        self.logger.info("Starting pro integrated analysis")
+        
+        prompt = """
+        Imagine you are the chief analyst at a venture capital firm, tasked with integrating the analyses of multiple specialized teams to provide a comprehensive investment insight. Your output should be structured with detailed scores and justifications:
+        
+        Example 1:
+        Market Viability: 8.23/10 - The market is on the cusp of a regulatory shift that could open up new demand channels, supported by consumer trends favoring sustainability. Despite the overall growth, regulatory uncertainty poses a potential risk.
+        Product Viability: 7.36/10 - The product introduces an innovative use of AI in renewable energy management, which is patent-pending. However, it faces competition from established players with deeper market penetration and brand recognition.
+        Founder Competency: 9.1/10 - The founding team comprises industry veterans with prior successful exits and a strong network in the energy sector. Their track record includes scaling similar startups and navigating complex regulatory landscapes.
+        
+        Recommendation: Invest. The team's deep industry expertise and innovative product position it well to capitalize on the market's regulatory changes. Although competition is stiff, the founders' experience and network provide a competitive edge crucial for market adoption and navigating potential regulatory hurdles.
+        
+        Example 2:
+        Market Viability: 5.31/10 - The market for wearable tech is saturated, with slow growth projections. However, there exists a niche but growing interest in wearables for pet health.
+        Product Viability: 6.5/10 - The startup's product offers real-time health monitoring for pets, a feature not widely available in the current market. Yet, the product faces challenges with high production costs and consumer skepticism about the necessity of such a device.
+        Founder Competency: 6.39/10 - The founding team includes passionate pet lovers with backgrounds in veterinary science and tech development. While they possess the technical skills and passion for the project, their lack of business and scaling experience is a concern.
+        
+        Recommendation: Hold. The unique product offering taps into an emerging market niche, presenting a potential opportunity. However, the combination of a saturated broader market, challenges in justifying the product's value to consumers, and the team's limited experience in business management suggests waiting for clearer signs of product-market fit and strategic direction.
+        
+        Now, analyze the following:
+        
+        Market Viability: {market_info}
+        Product Viability: {product_info}
+        Founder Competency: {founder_info}
+        Founder-Idea Fit: {founder_idea_fit}
+        Founder Segmentation: {founder_segmentation}
+        Random Forest Prediction: {rf_prediction}
+
+        Some context here for the scores: 
+        1. Founder-Idea-Fit ranges from -1 to 1, a stronger number signifies a better fit.
+        2. Founder Segmentation outcomes range from L1 to L5, with L5 being the most "competent" founders, and L1 otherwise.
+        3. Random Forest Prediction predicts the expected outcome purely based on a statistical model, with an accuracy of around 65%.
+        
+        Provide an overall investment recommendation based on these inputs. State whether you would advise 'Invest' or 'Hold', including a comprehensive rationale for your decision. Consider all provided predictions and analyses, but do not over-rely on any single prediction.
+        """
+        
+        user_prompt = prompt.format(
+            market_info=market_info,
+            product_info=product_info,
+            founder_info=founder_info,
+            founder_idea_fit=founder_idea_fit,
+            founder_segmentation=founder_segmentation,
+            rf_prediction=rf_prediction
+        )
+        
+        integrated_analysis = self.get_json_response(IntegratedAnalysis, user_prompt, "Be professional.")
+        self.logger.info("Pro integrated analysis completed")
+        
+        return integrated_analysis
+
+    def getquantDecision(self, rf_prediction, Founder_Idea_Fit, Founder_Segmentation):
         self.logger.info("Starting quantitative decision analysis")
         
         prompt = """
@@ -81,8 +149,6 @@ class IntegrationAgent(BaseAgent):
         To achieve this, we note that the minimum $PFS$ value is $-5$ (for a level $5$ founder who fails), and the maximum value is $5$ (for a level $1$ founder who succeeds). The normalization formula to scale $PFS$ to $[-1, 1]$ is:
         \[Normalized\;PFS = \frac{PFS}{5}\]
         
-        In addition, you are given the scores of analysis on Market Viability, Product Viability, and Founder Competency in the form of a report. Ignore any analysis in the report but do focus on the numbers. [Important: Focus on the scores, IGNORE any other analysis of the final report. The rest of analysis is meaningless to you and should not affect any of your decision-making.] 
-        
         Now use all of these information, produce a string of the predicted outcome and probability, with one line of reasoning. 
         
         Your response should be in the following format:
@@ -91,45 +157,18 @@ class IntegrationAgent(BaseAgent):
           "probability": <probability as a float between 0 and 1>,
           "reasoning": "<One-line reasoning for the decision>"
         }
+
+        You will also receive a categorical prediction outcome of the prediction model (which should not be your main evidence because it may not be very accurate, just around 65% accuracy).
         
         Ensure that your response is a valid JSON object and includes all the fields mentioned above.
         """
 
-        user_prompt = f"You are provided with the categorical prediction outcome of {prediction}, Founder Segmentation of {Founder_Segmentation}, Founder-Idea Fit of {Founder_Idea_Fit}. Finally, here's the report that contains the score breakdown:{final_decision}."
+        user_prompt = f"You are provided with the categorical prediction outcome of {rf_prediction}, Founder Segmentation of {Founder_Segmentation}, Founder-Idea Fit of {Founder_Idea_Fit}."
 
         quant_decision = self.get_json_response(QuantitativeDecision, prompt, user_prompt)
         self.logger.info("Quantitative decision analysis completed")
         
         return quant_decision
-
-    def _get_integration_prompt(self, mode):
-        base_prompt = """
-        As the chief analyst at a venture capital firm, integrate the following analyses into a cohesive evaluation:
-        {combined_info}
-
-        Synthesize the information and provide an overall assessment of the startup's potential.
-        Consider all provided predictions and analyses, including the Founder-Idea Fit, Founder Segmentation, 
-        Random Forest Prediction, and Categorization.
-        Score each aspect from 1 to 10 (10 is the best & most competitive). Specify the score to 2 digits and give very strong justification for it.
-
-        Your response should be structured as follows:
-        1. Overall Score: A number between 1 and 10, calculated as a weighted average of the individual scores.
-        2. Summary: A brief summary of the startup's potential, highlighting key points from each analysis and prediction.
-        3. Strengths: A list of key strengths identified across all analyses.
-        4. Weaknesses: A list of potential weaknesses or challenges identified.
-        5. Recommendation: A brief recommendation for next steps, whether to invest or not, and any conditions or areas for further investigation.
-        6. Prediction: A final decision: successful or unsuccessful, considering all provided predictions and analyses.
-        
-        Ensure that your response is a valid JSON object and includes all the fields mentioned above.
-        """
-
-        if mode == "advanced":
-            base_prompt += """
-            Additionally, provide a brief explanation of how the various predictions (LLM, Random Forest, Founder-Idea Fit, 
-            Founder Segmentation) influenced your final assessment and recommendation.
-            """
-
-        return base_prompt
 
 if __name__ == "__main__":
     def test_integration_agent():
@@ -171,22 +210,28 @@ if __name__ == "__main__":
 
         # Test basic integration
         print("Basic Integration:")
-        basic_integration = agent.integrate_analyses(market_info, product_info, founder_info, mode="basic")
+        basic_integration = agent.integrated_analysis_basic(market_info, product_info, founder_info)
         print(basic_integration)
         print()
 
         # Test advanced integration
         print("Advanced Integration:")
-        advanced_integration = agent.integrate_analyses(market_info, product_info, founder_info, prediction="Successful", mode="advanced")
+        advanced_integration = agent.integrated_analysis_pro(
+            market_info,
+            product_info,
+            founder_info,
+            founder_idea_fit=0.85,
+            founder_segmentation="L4",
+            rf_prediction="Successful"
+        )
         print(advanced_integration)
 
         # Test quantitative decision
         print("Quantitative Decision:")
         quant_decision = agent.getquantDecision(
-            prediction="Successful",
+            rf_prediction="Successful",
             Founder_Idea_Fit=0.85,
-            Founder_Segmentation="L4",
-            final_decision="Market Viability: 8, Product Viability: 9, Founder Competency: 8"
+            Founder_Segmentation="L4"
         )
         print(quant_decision)
 

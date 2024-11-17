@@ -46,14 +46,6 @@ class ProductAgent(BaseAgent):
         analysis = self.get_json_response(ProductAnalysis, self._get_analysis_prompt(), product_info)
         self.logger.info("Basic analysis completed")
         
-        if mode == "advanced":
-            self.logger.info("Starting advanced analysis")
-            innovation_score = self._assess_innovation(product_info)
-            market_fit = self._assess_market_fit(startup_info, product_info)
-            analysis.innovation_score = innovation_score
-            analysis.market_fit_score = market_fit
-            self.logger.info("Advanced analysis completed")
-        
         return analysis
 
     def _get_product_info(self, startup_info):
@@ -62,19 +54,6 @@ class ProductAgent(BaseAgent):
                f"Technology Stack: {startup_info.get('technology_stack', '')}\n" \
                f"Unique Selling Proposition: {startup_info.get('product_fit', '')}"
 
-    def _assess_innovation(self, product_info):
-        self.logger.info("Assessing innovation")
-        innovation_analysis = self.get_response(self._get_innovation_prompt(), product_info)
-        self.logger.debug(f"Innovation analysis: {innovation_analysis}")
-        return int(innovation_analysis.split('\n')[0])  # Assuming the score is the first line
-
-    def _assess_market_fit(self, startup_info, product_info):
-        self.logger.info("Assessing market fit")
-        combined_info = f"{startup_info.get('market_description', '')}\n{product_info}"
-        market_fit_analysis = self.get_response(self._get_market_fit_prompt(), combined_info)
-        self.logger.debug(f"Market fit analysis: {market_fit_analysis}")
-        return int(market_fit_analysis.split('\n')[0])  # Assuming the score is the first line
-
     def _get_analysis_prompt(self):
         return """
         As a product expert, analyze the startup's product based on the following information:
@@ -82,24 +61,8 @@ class ProductAgent(BaseAgent):
 
         Consider the product's features, technology stack, and unique selling proposition.
         Provide a comprehensive analysis and rate the product's potential on a scale of 1 to 10.
-        """
 
-    def _get_innovation_prompt(self):
-        return """
-        Assess the level of innovation in the product based on the following information:
-        {product_info}
-
-        Rate the innovation on a scale of 1 to 10, where 1 is not innovative at all and 10 is groundbreaking innovation.
-        Provide the rating as a single number on the first line, followed by a brief explanation for your rating.
-        """
-
-    def _get_market_fit_prompt(self):
-        return """
-        Evaluate the product-market fit based on the following information about the market and the product:
-        {combined_info}
-
-        Rate the product-market fit on a scale of 1 to 10, where 1 is poor fit and 10 is perfect fit.
-        Provide the rating as a single number on the first line, followed by a brief explanation for your rating.
+        Make sure that you think step by step and analyze in a professional manner.
         """
 
 if __name__ == "__main__":

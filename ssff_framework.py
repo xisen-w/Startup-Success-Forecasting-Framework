@@ -49,26 +49,21 @@ class StartupFramework:
 
         founder_segmentation = self.founder_agent.segment_founder(startup_info.founder_backgrounds)
         founder_idea_fit = self.founder_agent.calculate_idea_fit(startup_info.dict(), startup_info.founder_backgrounds)
-        rf_prediction = prediction
 
         # Integrate analyses
-        integrated_analysis = self.integration_agent.integrate_analyses(
+        integrated_analysis = self.integration_agent.integrated_analysis_pro(
             market_info=market_analysis.dict(),
             product_info=product_analysis.dict(),
-            founder_info=founder_analysis.dict(),
-            prediction=prediction,
-            founder_idea_fit=founder_idea_fit[0],
+            founder_info=founder_analysis.dict(),  
+            founder_idea_fit=founder_idea_fit,
             founder_segmentation=founder_segmentation,
-            rf_prediction=rf_prediction,
-            categorization=categorization.dict(),
-            mode="advanced"
+            rf_prediction=prediction,
         )
 
         quant_decision = self.integration_agent.getquantDecision(
             prediction,
-            founder_idea_fit[0],  # Assuming this returns a tuple (idea_fit, cosine_similarity)
+            founder_idea_fit,
             founder_segmentation,
-            integrated_analysis.dict()
         )
 
         return {
@@ -81,7 +76,6 @@ class StartupFramework:
             'Categorical Prediction': prediction,
             'Categorization': categorization.dict(),
             'Quantitative Decision': quant_decision.dict(),
-            'Random Forest Prediction': rf_prediction,
             'Startup Info': startup_info.dict()
         }
 

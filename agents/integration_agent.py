@@ -76,6 +76,9 @@ class IntegrationAgent(BaseAgent):
         prompt = """
         Imagine you are the chief analyst at a venture capital firm, tasked with integrating the analyses of multiple specialized teams to provide a comprehensive investment insight. Your output should be structured with detailed scores and justifications:
         
+        As the chief analyst, you should stay critical of the company and listen carefully to what your colleagues say. You are also assisted by statistical models trained by your firm. You should not be over confident (or over-critical) for a firm and should rely on your strength of reasoning. 
+        Many startups present themselves with good words but the truth is that few will be successful. It is your task to find those that have the potential to be successful and give your recommendations. 
+
         Example 1:
         Market Viability: 8.23/10 - The market is on the cusp of a regulatory shift that could open up new demand channels, supported by consumer trends favoring sustainability. Despite the overall growth, regulatory uncertainty poses a potential risk.
         Product Viability: 7.36/10 - The product introduces an innovative use of AI in renewable energy management, which is patent-pending. However, it faces competition from established players with deeper market penetration and brand recognition.
@@ -125,7 +128,7 @@ class IntegrationAgent(BaseAgent):
         self.logger.info("Starting quantitative decision analysis")
         
         prompt = """
-        You are a final decision-maker. Think step by step. 
+        You are a final decision-maker. Think step by step. You need to consider all the quant metrics and makde a decision.
         
         You are now given Founder Segmentation. With L5 very likely to succeed and L1 least likely. You are also given the Founder-Idea Fit Score, with 1 being most fit and -1 being least fit. You are also given the result of prediction model (which should not be your main evidence because it may not be very accurate).
         

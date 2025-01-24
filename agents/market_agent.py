@@ -77,7 +77,10 @@ class MarketAgent(BaseAgent):
             
             nl_advanced_analysis = self.get_response(prompt, "Formulate a professional and comprehensive analysis please.")
             self.logger.info("Natural language analysis completed")
-            return nl_advanced_analysis
+            return {
+                'analysis': nl_advanced_analysis,
+                'external_report': external_knowledge
+            }
         
         return analysis
 

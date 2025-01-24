@@ -143,40 +143,11 @@ class StartupFramework:
         }
 
 def main():
-    framework = StartupFramework()
+    framework = StartupFramework("gpt-4o")
     
     # Test case: Stripe (as an early-stage startup)
     startup_info_str = """
-    Company: Stripe
-    Description: Developer-first payment processing platform that allows businesses to accept and manage online payments through simple API integration.
-    
-    Market Information:
-    - Global digital payments market valued at approximately $1.2 trillion
-    - Growing at CAGR of 20% with accelerating adoption of online commerce
-    - Key competitors include PayPal, Square, traditional payment processors
-    
-    Product Details:
-    - RESTful API for payment processing
-    - Support for 135+ currencies
-    - Fraud prevention system
-    - Real-time reporting dashboard
-    - Subscription management
-    - Invoice automation
-    - Mobile SDK
-    
-    Technology Stack:
-    - Ruby on Rails backend
-    - React.js frontend
-    - PostgreSQL database
-    - Redis for caching
-    - AWS infrastructure
-    - Machine learning for fraud detection
-    
-    Founder Backgrounds:
-    Patrick Collison: Previously founded and sold Auctomatic for $5M at age 19, degree in mathematics
-    John Collison: Youngest self-made billionaire, studied physics at Harvard before dropping out
-    
-    Funding: Raised $2M in seed funding
+    Turismocity is a travel search engine for Latin America that provides price comparison tools and travel deals. Eugenio Fage, the CTO and co-founder, has a background in software engineering and extensive experience in developing travel technology solutions.
     """
 
     print("\n=== Testing Natural Language Analysis ===")
@@ -201,7 +172,7 @@ def main():
         
         print("\n3. FOUNDER ANALYSIS:")
         print("-" * 20)
-        print(natural_result['Founder Analysis'].analysis)
+        print(natural_result['Founder Analysis'])
         
         print("\n4. FINAL INTEGRATED ANALYSIS:")
         print("-" * 20)

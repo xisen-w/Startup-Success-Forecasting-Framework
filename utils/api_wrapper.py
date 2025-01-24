@@ -1,11 +1,11 @@
+import os
 import streamlit as st
 from openai import OpenAI
 from pydantic import BaseModel
-import os
 from dotenv import load_dotenv
-import serpapi 
+import serpapi
 
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
 
 class OpenAIAPI:
@@ -13,12 +13,20 @@ class OpenAIAPI:
         """
         Initialize the OpenAIAPI with the given model name.
         """
-        self.model_name = model_name  # E.g., "gpt-4-0613" or "gpt-4-1106-preview"
+        self.model_name = model_name
         
-        # Try to get the API key from Streamlit secrets, fall back to environment variable
-        api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
+        # Try to get API key with fallback options
+        try:
+            import streamlit as st
+            api_key = st.secrets.get("OPENAI_API_KEY")
+        except:
+            api_key = None
+            
         if not api_key:
-            raise ValueError("OPENAI_API_KEY not found in Streamlit secrets or environment variables")
+            api_key = os.getenv("OPENAI_API_KEY")
+            
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not found in environment variables")
         
         self.client = OpenAI(api_key=api_key)
 

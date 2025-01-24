@@ -57,7 +57,10 @@ class ProductAgent(BaseAgent):
             
             nl_advanced_analysis = self.get_response(prompt, "Write a comprehensive report about the product analysis from the VC perspective.")
             self.logger.info("Natural language analysis completed")
-            return nl_advanced_analysis
+            return {
+                'analysis': nl_advanced_analysis,
+                'external_report': product_report
+            }
         
         if mode == "advanced":
             self.logger.info("Starting advanced analysis with external research")

@@ -25,6 +25,8 @@ import json
 from tqdm import tqdm
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
+from datetime import datetime # Import datetime
+import time # Import time for adding delays
 
 # Add the project root directory to the Python path
 # Assuming this script is in rebuttal_supplements/M2_New_Experiments/
@@ -33,15 +35,28 @@ from dotenv import load_dotenv
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, project_root)
 
+# ---- START DEBUGGING BLOCK ----
+print(f"DEBUG: Current sys.path: {sys.path}")
+agents_path = os.path.join(project_root, 'agents')
+print(f"DEBUG: Expected 'agents' directory path: {agents_path}")
+print(f"DEBUG: Does 'agents' directory exist? {os.path.isdir(agents_path)}")
+if os.path.isdir(agents_path):
+    print(f"DEBUG: Contents of 'agents' directory: {os.listdir(agents_path)}")
+    init_py_path = os.path.join(agents_path, '__init__.py')
+    print(f"DEBUG: Expected '__init__.py' path: {init_py_path}")
+    print(f"DEBUG: Does '__init__.py' exist in 'agents'? {os.path.isfile(init_py_path)}")
+# ---- END DEBUGGING BLOCK ----
+
 # Ensure the agents module can be found
 # If agents.base_agent is still not found, you might need to adjust the path
 # or ensure __init__.py files are present in relevant directories.
-try:
-    from agents.base_agent import BaseAgent
-except ImportError:
-    print("Error: Could not import BaseAgent. Please check the sys.path and project structure.")
-    print(f"Current sys.path includes: {project_root}")
-    sys.exit(1)
+# try:
+from agents.base_agent import BaseAgent
+# except ImportError as e: # Capture the exception instance
+#     print(f"Error: Could not import BaseAgent. Import error was: {e}") # Print the specific import error
+#     print(f"Current sys.path for import: {sys.path}") # Re-print sys.path at point of failure
+#     print(f"Project root used for sys.path.insert: {project_root}")
+#     sys.exit(1)
 
 
 class BaselineAnalysis(BaseModel):
@@ -66,7 +81,7 @@ class BaselineFramework(BaseAgent):
         
         prompt = """
         You are an experienced venture capitalist analyzing a startup. Based on the provided information, 
-        give a comprehensive analysis and predict if the startup will be successful or not.
+        give a comprehensive analysis and give your investment recommendation. Looking at the potential, will you invest? 
         
         Your analysis should include:
         1. Market analysis
@@ -74,6 +89,9 @@ class BaselineFramework(BaseAgent):
         3. Founder/team assessment
         4. Overall score (1-10)
         5. Investment recommendation (must be 'Successful' or 'Unsuccessful')
+
+        Criteria for future success (like the destination of the startup in the future according to your prediction): 
+        - Startups that raised more than $500M, acquired more than $500M or had an initial public offering over $500M valuation are defined as success. Startups that raised between $100K and $4M but did not achieve significant success afterwards are considered as failed.
         """
         
         try:
@@ -110,7 +128,7 @@ def main():
         "--output_file", 
         type=str, 
         default=None,
-        help="Path to the output JSONL file. Defaults to a generated name."
+        help="Path to the output JSON file. If not specified, a name with timestamp will be generated in 'experiment_results/'."
     )
     parser.add_argument(
         "--info_column",
@@ -122,20 +140,36 @@ def main():
     args = parser.parse_args()
 
     # Construct full dataset path
-    # The script is in M2_New_Experiments, data is in M2_New_Experiments/data
-    script_dir = os.path.dirname(__file__)
+    script_dir = os.path.dirname(__file__) # Directory of the current script
     full_dataset_path = os.path.join(script_dir, args.dataset_path)
 
-
     if args.output_file is None:
-        dataset_name = os.path.splitext(os.path.basename(args.dataset_path))[0]
-        args.output_file = os.path.join(script_dir, f"results_baseline_{args.model_name}_{dataset_name}.jsonl")
+        # Generate a filename with timestamp and model name, inside 'experiment_results'
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        dataset_name_part = os.path.splitext(os.path.basename(args.dataset_path))[0].replace("curated_dataset_success_", "") # e.g., 10pct
+        
+        # Define the target directory for results
+        results_dir = os.path.join(script_dir, "experiment_results")
+        
+        # Ensure the results_dir exists
+        os.makedirs(results_dir, exist_ok=True)
+        
+        # Construct the full output file path
+        output_filename = f"baseline_{args.model_name}_{dataset_name_part}_{timestamp}.json"
+        args.output_file = os.path.join(results_dir, output_filename)
+    else:
+        # If an output_file is specified, ensure its directory exists
+        # (This part was already good, but good to keep in mind if output_file could be an absolute path)
+        output_dir_for_specified_file = os.path.dirname(args.output_file)
+        if output_dir_for_specified_file: # Only if there's a directory part
+            os.makedirs(output_dir_for_specified_file, exist_ok=True)
+
 
     logging.info(f"Starting experiment with an LLM model: {args.model_name}")
     logging.info(f"Processing dataset: {full_dataset_path}")
     if args.num_rows:
         logging.info(f"Number of rows to process: {args.num_rows}")
-    logging.info(f"Output will be saved to: {args.output_file}")
+    logging.info(f"Output will be saved to (JSON List format): {args.output_file}")
     logging.info(f"Startup info will be read from column: '{args.info_column}'")
 
     try:
@@ -160,22 +194,90 @@ def main():
 
     framework = BaselineFramework(model=args.model_name)
     
-    # Ensure the output directory exists
-    os.makedirs(os.path.dirname(args.output_file), exist_ok=True)
+    # The os.makedirs call for the output file's directory is now handled
+    # when args.output_file is constructed or if it's explicitly provided.
+    # So the specific block here can be simplified or rely on the logic above.
+    # output_dir = os.path.dirname(args.output_file)
+    # if output_dir: 
+    #     os.makedirs(output_dir, exist_ok=True)
+    # This is now handled correctly whether output_file is generated or user-specified.
 
-    with open(args.output_file, 'w') as outfile:
-        for index, row in tqdm(df_to_process.iterrows(), total=len(df_to_process), desc="Analyzing startups"):
-            startup_info_text = row[args.info_column]
-            if pd.isna(startup_info_text):
-                logging.warning(f"Skipping row {index} due to missing startup info in column '{args.info_column}'.")
-                result = {"error": "Missing startup info", "original_index": index}
+    # Define the columns you want to carry over to the output
+    carry_over_columns = ['org_uuid', 'org_name', 'label'] 
+
+    # Verify that these carry_over_columns exist in the DataFrame
+    for col_name in carry_over_columns:
+        if col_name not in df_to_process.columns:
+            logging.error(f"Specified carry-over column '{col_name}' not found in the dataset. This column is required.")
+            logging.error(f"Available columns: {df_to_process.columns.tolist()}")
+            sys.exit(1)
+
+    all_results = [] # Initialize an empty list to store all results
+
+    # Try to load existing results if the file exists and is valid JSON
+    if os.path.exists(args.output_file):
+        try:
+            with open(args.output_file, 'r') as f_read:
+                content = f_read.read()
+                if content.strip(): # Check if file is not empty
+                    all_results = json.loads(content)
+                    if not isinstance(all_results, list):
+                        logging.warning(f"Existing output file {args.output_file} does not contain a JSON list. Starting fresh.")
+                        all_results = []
+                    else:
+                        logging.info(f"Loaded {len(all_results)} existing results from {args.output_file}")
+        except json.JSONDecodeError:
+            logging.warning(f"Could not decode JSON from existing file {args.output_file}. Starting fresh.")
+            all_results = []
+        except Exception as e:
+            logging.error(f"Error reading existing results file {args.output_file}: {e}. Starting fresh.")
+            all_results = []
+
+    for index, row in tqdm(df_to_process.iterrows(), total=len(df_to_process), desc="Analyzing startups"):
+        # Skip already processed records if resuming (simple check based on original_index)
+        # This is a basic resume functionality. More robust resume would need to check org_uuid.
+        if any(res.get("original_index") == index for res in all_results):
+            logging.info(f"Skipping already processed original_index: {index}")
+            continue
+
+        # Introduce a delay to avoid hitting rate limits
+        time.sleep(1) # Wait for 1 second before making the API call
+
+        startup_info_text = row[args.info_column]
+        base_data = {"original_index": index}
+        for col_name in carry_over_columns:
+            if col_name in row:
+                base_data[col_name] = row[col_name]
             else:
-                result = framework.analyze_startup(str(startup_info_text))
-                result["original_index"] = index # Keep track of original row
+                base_data[col_name] = None
 
-            outfile.write(json.dumps(result) + '\\n')
-    
-    logging.info(f"Processing complete. Results saved to {args.output_file}")
+        current_result_data = {}
+        if pd.isna(startup_info_text):
+            logging.warning(f"Skipping row {index} due to missing startup info in column '{args.info_column}'.")
+            current_result_data = {**base_data, "error": "Missing startup info"}
+        else:
+            llm_analysis_result = framework.analyze_startup(str(startup_info_text))
+            current_result_data = {**base_data, **llm_analysis_result}
+        
+        all_results.append(current_result_data) # Append current result to the list
+
+        # Write the entire updated list back to the file after each result
+        try:
+            with open(args.output_file, 'w') as outfile:
+                json.dump(all_results, outfile, indent=4) # Use indent for readability
+        except Exception as e:
+            logging.error(f"CRITICAL: Could not write results to {args.output_file} after processing index {index}. Error: {e}")
+            # Decide how to handle this: maybe save current_result_data to a temp file, or try again?
+            # For now, it will just continue, and the next successful write will save all_results up to that point.
+
+    # Final write (redundant if last iteration's write was successful, but safe)
+    try:
+        with open(args.output_file, 'w') as outfile:
+            json.dump(all_results, outfile, indent=4)
+        logging.info(f"Processing complete. Results saved to {args.output_file}")
+    except Exception as e:
+        logging.error(f"CRITICAL: Could not write final results to {args.output_file}. Error: {e}")
+        logging.info(f"Data for this run (may be incomplete if script interrupted before last write): {len(all_results)} records processed.")
 
 if __name__ == "__main__":
     main()

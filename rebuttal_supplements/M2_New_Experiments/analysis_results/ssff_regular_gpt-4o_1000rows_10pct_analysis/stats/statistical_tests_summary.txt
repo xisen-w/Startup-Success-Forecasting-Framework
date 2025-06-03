@@ -1,0 +1,95 @@
+--- Analysis for market_viability by pro_prediction ---
+Mann-Whitney U test for market_viability between 'Hold' (N=69, Mean=8.45) and 'Invest' (N=404, Mean=8.59):
+  Statistic: 13522.00, P-value: 0.6418
+  Difference is not statistically significant (p >= 0.05).
+
+--- Analysis for product_potential by pro_prediction ---
+Mann-Whitney U test for product_potential between 'Hold' (N=69, Mean=7.35) and 'Invest' (N=404, Mean=8.30):
+  Statistic: 6789.00, P-value: 0.0000
+  Difference is statistically significant (p < 0.05).
+
+--- Analysis for product_innovation by pro_prediction ---
+Mann-Whitney U test for product_innovation between 'Hold' (N=69, Mean=7.10) and 'Invest' (N=404, Mean=7.98):
+  Statistic: 8249.50, P-value: 0.0000
+  Difference is statistically significant (p < 0.05).
+
+--- Analysis for product_market_fit by pro_prediction ---
+Mann-Whitney U test for product_market_fit between 'Hold' (N=69, Mean=7.77) and 'Invest' (N=404, Mean=8.41):
+  Statistic: 9207.50, P-value: 0.0000
+  Difference is statistically significant (p < 0.05).
+
+--- Analysis for founder_competency by pro_prediction ---
+Mann-Whitney U test for founder_competency between 'Hold' (N=69, Mean=6.99) and 'Invest' (N=404, Mean=8.26):
+  Statistic: 5247.50, P-value: 0.0000
+  Difference is statistically significant (p < 0.05).
+
+--- Analysis for founder_idea_fit by pro_prediction ---
+Mann-Whitney U test for founder_idea_fit between 'Hold' (N=69, Mean=0.45) and 'Invest' (N=404, Mean=0.42):
+  Statistic: 16096.00, P-value: 0.0398
+  Difference is statistically significant (p < 0.05).
+
+--- Analysis for pro_overall by pro_prediction ---
+Mann-Whitney U test for pro_overall between 'Hold' (N=69, Mean=7.28) and 'Invest' (N=404, Mean=8.20):
+  Statistic: 1381.00, P-value: 0.0000
+  Difference is statistically significant (p < 0.05).
+
+--- Analysis for basic_overall by pro_prediction ---
+Mann-Whitney U test for basic_overall between 'Hold' (N=69, Mean=7.65) and 'Invest' (N=404, Mean=8.45):
+  Statistic: 3290.00, P-value: 0.0000
+  Difference is statistically significant (p < 0.05).
+
+--- Analysis for founder_segmentation by pro_prediction ---
+Mann-Whitney U test for founder_segmentation between 'Hold' (N=69, Mean=2.97) and 'Invest' (N=404, Mean=3.14):
+  Statistic: 12411.00, P-value: 0.0946
+  Difference is not statistically significant (p >= 0.05).
+
+--- Analysis for top_founder_idea_fit by pro_prediction ---
+Mann-Whitney U test for top_founder_idea_fit between 'Hold' (N=69, Mean=0.52) and 'Invest' (N=404, Mean=0.49):
+  Statistic: 15928.00, P-value: 0.0580
+  Difference is not statistically significant (p >= 0.05).
+
+--- Analysis for market_viability by basic_prediction ---
+Mann-Whitney U test for market_viability between 'Hold' (N=29, Mean=8.10) and 'Invest' (N=444, Mean=8.60):
+  Statistic: 4682.00, P-value: 0.0038
+  Difference is statistically significant (p < 0.05).
+
+--- Analysis for product_potential by basic_prediction ---
+Mann-Whitney U test for product_potential between 'Hold' (N=29, Mean=6.90) and 'Invest' (N=444, Mean=8.25):
+  Statistic: 3268.50, P-value: 0.0000
+  Difference is statistically significant (p < 0.05).
+
+--- Analysis for product_innovation by basic_prediction ---
+Mann-Whitney U test for product_innovation between 'Hold' (N=29, Mean=6.86) and 'Invest' (N=444, Mean=7.91):
+  Statistic: 3721.00, P-value: 0.0001
+  Difference is statistically significant (p < 0.05).
+
+--- Analysis for product_market_fit by basic_prediction ---
+Mann-Whitney U test for product_market_fit between 'Hold' (N=29, Mean=7.34) and 'Invest' (N=444, Mean=8.38):
+  Statistic: 3912.50, P-value: 0.0001
+  Difference is statistically significant (p < 0.05).
+
+--- Analysis for founder_competency by basic_prediction ---
+Mann-Whitney U test for founder_competency between 'Hold' (N=29, Mean=6.21) and 'Invest' (N=444, Mean=8.20):
+  Statistic: 1653.00, P-value: 0.0000
+  Difference is statistically significant (p < 0.05).
+
+--- Analysis for founder_idea_fit by basic_prediction ---
+Mann-Whitney U test for founder_idea_fit between 'Hold' (N=29, Mean=0.45) and 'Invest' (N=444, Mean=0.43):
+  Statistic: 7338.00, P-value: 0.2072
+  Difference is not statistically significant (p >= 0.05).
+
+--- Analysis for basic_overall by basic_prediction ---
+Mann-Whitney U test for basic_overall between 'Hold' (N=29, Mean=7.03) and 'Invest' (N=444, Mean=8.41):
+  Statistic: 187.00, P-value: 0.0000
+  Difference is statistically significant (p < 0.05).
+
+--- Analysis for founder_segmentation by basic_prediction ---
+Mann-Whitney U test for founder_segmentation between 'Hold' (N=29, Mean=2.97) and 'Invest' (N=444, Mean=3.13):
+  Statistic: 5836.00, P-value: 0.3325
+  Difference is not statistically significant (p >= 0.05).
+
+--- Analysis for top_founder_idea_fit by basic_prediction ---
+Mann-Whitney U test for top_founder_idea_fit between 'Hold' (N=29, Mean=0.52) and 'Invest' (N=444, Mean=0.50):
+  Statistic: 7165.00, P-value: 0.3083
+  Difference is not statistically significant (p >= 0.05).
+

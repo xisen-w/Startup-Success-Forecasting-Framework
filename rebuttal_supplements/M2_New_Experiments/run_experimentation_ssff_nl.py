@@ -204,7 +204,7 @@ def main():
             current_result_dict["combined_input_length"] = len(startup_info_str)
 
             try:
-                # Run natural language analysis
+            # Run natural language analysis
                 analysis_raw_output = framework.analyze_startup_natural(startup_info_str)
                 
                 # Populate Pydantic model fields from analysis_raw_output

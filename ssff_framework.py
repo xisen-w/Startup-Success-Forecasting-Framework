@@ -60,6 +60,13 @@ class StartupFramework:
             rf_prediction=prediction,
         )
 
+        # Integrate analyses
+        integrated_analysis_basic = self.integration_agent.integrated_analysis_basic(
+            market_info=market_analysis.dict(),
+            product_info=product_analysis.dict(),
+            founder_info=founder_analysis.dict(),  
+        )
+
         quant_decision = self.integration_agent.getquantDecision(
             prediction,
             founder_idea_fit,
@@ -76,7 +83,8 @@ class StartupFramework:
             'Categorical Prediction': prediction,
             'Categorization': categorization.dict(),
             'Quantitative Decision': quant_decision.dict(),
-            'Startup Info': startup_info.dict()
+            'Startup Info': startup_info.dict(),
+            'Basic Analysis': integrated_analysis_basic.dict(),
         }
 
     def analyze_startup_natural(self, startup_info_str: str) -> Dict[str, Any]:
@@ -123,6 +131,12 @@ class StartupFramework:
             rf_prediction=prediction,
         )
 
+        integrated_analysis_basic = self.integration_agent.integrated_analysis_basic(
+            market_info={"analysis": market_analysis},  # Wrap in dict to maintain compatibility
+            product_info={"analysis": product_analysis},
+            founder_info=founder_analysis.dict(),
+        )
+
         quant_decision = self.integration_agent.getquantDecision(
             prediction,
             founder_idea_fit,
@@ -139,18 +153,64 @@ class StartupFramework:
             'Categorical Prediction': prediction,
             'Categorization': categorization.dict(),
             'Quantitative Decision': quant_decision.dict(),
-            'Startup Info': startup_info.dict()
+            'Startup Info': startup_info.dict(),
+            'Basic Analysis': integrated_analysis_basic.dict(),
         }
 
 def main():
     framework = StartupFramework("gpt-4o")
     
-    # Test case: Stripe (as an early-stage startup)
+    # Test case: Turismocity (as an example)
     startup_info_str = """
     Turismocity is a travel search engine for Latin America that provides price comparison tools and travel deals. Eugenio Fage, the CTO and co-founder, has a background in software engineering and extensive experience in developing travel technology solutions.
     """
 
-    print("\n=== Testing Natural Language Analysis ===")
+    print("\n=== Testing Advanced Analysis (analyze_startup) ===")
+    print("-" * 80)
+    
+    try:
+        print("\nStarting Advanced Analysis...")
+        advanced_result = framework.analyze_startup(startup_info_str)
+        
+        print("\nADVANCED ANALYSIS RESULTS:")
+        print("-" * 40)
+        
+        print("\n1. MARKET ANALYSIS:")
+        print("-" * 20)
+        print(advanced_result.get('Market Analysis', 'N/A'))
+        
+        print("\n2. PRODUCT ANALYSIS:")
+        print("-" * 20)
+        print(advanced_result.get('Product Analysis', 'N/A'))
+        
+        print("\n3. FOUNDER ANALYSIS:")
+        print("-" * 20)
+        print(advanced_result.get('Founder Analysis', 'N/A'))
+        
+        print("\n4. FINAL INTEGRATED ANALYSIS (PRO):")
+        print("-" * 20)
+        print(advanced_result.get('Final Analysis', 'N/A'))
+
+        print("\n5. BASIC INTEGRATED ANALYSIS:")
+        print("-" * 20)
+        print(advanced_result.get('Basic Analysis', 'N/A'))
+        
+        print("\n6. QUANTITATIVE METRICS:")
+        print("-" * 20)
+        print(f"Founder Segmentation: {advanced_result.get('Founder Segmentation', 'N/A')}")
+        print(f"Founder Idea Fit: {advanced_result.get('Founder Idea Fit', 'N/A')}")
+        print(f"Categorical Prediction: {advanced_result.get('Categorical Prediction', 'N/A')}")
+        print(f"Categorization: {advanced_result.get('Categorization', 'N/A')}")
+        print(f"Quantitative Decision: {advanced_result.get('Quantitative Decision', 'N/A')}")
+        print(f"Startup Info Parsed: {advanced_result.get('Startup Info', 'N/A')}")
+
+    except Exception as e:
+        print(f"\nError during advanced analysis: {str(e)}")
+        import traceback
+        traceback.print_exc()
+
+
+    print("\n\n=== Testing Natural Language Analysis (analyze_startup_natural) ===")
     print("-" * 80)
     
     try:
@@ -164,28 +224,35 @@ def main():
         
         print("\n1. MARKET ANALYSIS:")
         print("-" * 20)
-        print(natural_result['Market Analysis'])
+        print(natural_result.get('Market Analysis', 'N/A')) # Use .get for safety
         
         print("\n2. PRODUCT ANALYSIS:")
         print("-" * 20)
-        print(natural_result['Product Analysis'])
+        print(natural_result.get('Product Analysis', 'N/A')) # Use .get for safety
         
         print("\n3. FOUNDER ANALYSIS:")
         print("-" * 20)
-        print(natural_result['Founder Analysis'])
+        print(natural_result.get('Founder Analysis', 'N/A')) # Use .get for safety
         
-        print("\n4. FINAL INTEGRATED ANALYSIS:")
+        print("\n4. FINAL INTEGRATED ANALYSIS (PRO):")
         print("-" * 20)
-        print(natural_result['Final Analysis'])
+        print(natural_result.get('Final Analysis', 'N/A')) # Use .get for safety
+
+        print("\n5. BASIC INTEGRATED ANALYSIS:")
+        print("-" * 20)
+        print(natural_result.get('Basic Analysis', 'N/A')) # Use .get for safety
         
-        print("\n5. QUANTITATIVE METRICS:")
+        print("\n6. QUANTITATIVE METRICS:")
         print("-" * 20)
-        print(f"Founder Idea Fit: {natural_result['Founder Idea Fit']}")
-        print(f"Categorical Prediction: {natural_result['Categorical Prediction']}")
-        print(f"Quantitative Decision: {natural_result['Quantitative Decision']}")
+        print(f"Founder Segmentation: {natural_result.get('Founder Segmentation', 'N/A')}")
+        print(f"Founder Idea Fit: {natural_result.get('Founder Idea Fit', 'N/A')}")
+        print(f"Categorical Prediction: {natural_result.get('Categorical Prediction', 'N/A')}")
+        print(f"Categorization: {natural_result.get('Categorization', 'N/A')}")
+        print(f"Quantitative Decision: {natural_result.get('Quantitative Decision', 'N/A')}")
+        print(f"Startup Info Parsed: {natural_result.get('Startup Info', 'N/A')}")
         
     except Exception as e:
-        print(f"\nError during analysis: {str(e)}")
+        print(f"\nError during natural language analysis: {str(e)}")
         import traceback
         traceback.print_exc()
 

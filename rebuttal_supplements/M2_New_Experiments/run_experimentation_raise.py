@@ -71,6 +71,9 @@ class RAISEFramework(BaseAgent):
 
         system_prompt = """You are an expert startup analyst. Apply the given decision policy to the founder and startup information to predict success.
 Your entire output should be a single JSON object matching the provided schema.
+
+ Criteria for future success (like the destination of the startup in the future according to your prediction): 
+- Startups that raised more than $500M, acquired more than $500M or had an initial public offering over $500M valuation are defined as success. Startups that raised between $100K and $4M but did not achieve significant success afterwards are considered as failed.
 """
         
         user_prompt_template = '''

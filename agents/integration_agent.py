@@ -56,7 +56,11 @@ class IntegrationAgent(BaseAgent):
         Product Viability: {product_info}
         Founder Competency: {founder_info}
         
+        Criteria for future success (like the destination of the startup in the future according to your prediction): 
+        - Startups that raised more than $500M, acquired more than $500M or had an initial public offering over $500M valuation are defined as success. Startups that raised between $100K and $4M but did not achieve significant success afterwards are considered as failed.
+
         Provide an overall investment recommendation based on these inputs. State whether you would advise 'Invest' or 'Hold', including a comprehensive rationale for your decision.
+
         """
         
         user_prompt = prompt.format(
@@ -107,7 +111,12 @@ class IntegrationAgent(BaseAgent):
         2. Founder Segmentation outcomes range from L1 to L5, with L5 being the most "competent" founders, and L1 otherwise.
         3. Random Forest Prediction predicts the expected outcome purely based on a statistical model, with an accuracy of around 65%.
         
-        Provide an overall investment recommendation based on these inputs. State whether you would advise 'Invest' or 'Hold', including a comprehensive rationale for your decision. Consider all provided predictions and analyses, but do not over-rely on any single prediction.
+        Hence, respect the random forest prediction model, but do not over-rely on it. If your hypothesis is different from the random forest model, you would need stronger evidence from other sources to justify. 
+
+        Criteria for future success (like the destination of the startup in the future according to your prediction): 
+        - Startups that raised more than $500M, acquired more than $500M or had an initial public offering over $500M valuation are defined as success. Startups that raised between $100K and $4M but did not achieve significant success afterwards are considered as failed.
+
+        Provide an overall investment recommendation based on these inputs. State whether you would advise 'Invest' or 'Hold', including a comprehensive rationale for your decision. Consider all provided predictions and analyses in an effective way.
         """
         
         user_prompt = prompt.format(

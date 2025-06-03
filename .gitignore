@@ -8,6 +8,7 @@ __pycache__/
 myenv/
 venv/
 ENV/
+myenv_vela/
 
 # Distribution / packaging
 .Python

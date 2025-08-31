@@ -1,0 +1,39 @@
+\begin{table}[H]
+\centering
+\caption{Performance of baseline LLM methods across different models and datasets. All models demonstrate systematic over-prediction bias with high recall but poor precision. GPT-4o results show substantial variability across runs (CV=44.2\% for accuracy), highlighting the instability of vanilla LLM approaches.}
+\label{tab:baseline_llm}
+\begin{tabular}{lcccccccc}
+\toprule
+Model & Dataset & Records & Acc. & Prec. & F1 & Pred. Bias & Support (Succ./Fail.) \\
+\midrule
+GPT-4o & 20\% Success & 993 & 21.1\% & 20.2\% & 33.6\% & 75.38 & 198 / 794 \\
+GPT-4o & 30\% Success & 991 & 30.8\% & 30.2\% & 46.4\% & 122.88 & 297 / 694 \\
+GPT-4o$^{\dagger}$ & 10\% Success & 992 & 16.3\% $\pm$ 7.2\% & 10.7\% $\pm$ 0.8\% & 19.3\% $\pm$ 1.2\% & 44.65 $\pm$ 52.3 & 99 / 893 \\
+O3-mini & 10\% Success & 992 & 12.8\% & 10.3\% & 18.6\% & 34.43 & 99 / 893 \\
+GPT-4o-mini & 10\% Success & 992 & 10.8\% & 10.1\% & 18.3\% & 123.00 & 99 / 893 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% Footnote explanation
+$^{\dagger}$ GPT-4o results averaged across two independent runs showing substantial performance variability (accuracy range: 11.2\%-21.4\%, prediction bias range: 7.63-81.67). This instability demonstrates the unreliability of vanilla LLM approaches for startup evaluation.
+
+% Alternative version with batch results only
+\begin{table}[H]
+\centering
+\caption{Performance comparison of baseline LLMs on standardized 1000-startup dataset (10\% success rate). All models show severe over-prediction bias, with GPT-4o demonstrating additional instability across runs.}
+\label{tab:baseline_llm_1000}
+\begin{tabular}{lcccccccc}
+\toprule
+Model & Records & Acc. & Prec. & F1 & Pred. Bias & TP/FP & Support (Succ./Fail.) \\
+\midrule
+GPT-4o (Run 1) & 992 & 11.2\% & 10.1\% & 18.4\% & 81.67 & 99/881 & 99 / 893 \\
+GPT-4o (Run 2) & 992 & 21.4\% & 11.2\% & 20.1\% & 7.63 & 98/779 & 99 / 893 \\
+\hdashline
+GPT-4o (Average) & 992 & \textbf{16.3\% $\pm$ 7.2\%} & 10.7\% $\pm$ 0.8\% & 19.3\% $\pm$ 1.2\% & 44.65 $\pm$ 52.3 & -- & 99 / 893 \\
+\midrule
+O3-mini & 992 & 12.8\% & 10.3\% & 18.6\% & 34.43 & 99/779 & 99 / 893 \\
+GPT-4o-mini & 992 & 10.8\% & 10.1\% & 18.3\% & 123.00 & 99/881 & 99 / 893 \\
+\bottomrule
+\end{tabular}
+\end{table} 
